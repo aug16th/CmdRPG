@@ -3,11 +3,17 @@ GoblinVillage
 name: Goblin Village
 description: This is a messed up makeshift goblin settlement.
 locations: Campfire
-characters: Bartender
+characters: BozoGoblin
 
 [Locations]#Locations in goblin village
 Campfire
 name: Campfire
 description: There is a burning campfire
 interactables: Bread, Ale, Apple
-characters: Bartender
+characters: BozoGoblin
+
+[Characters]
+BozoGoblin
+name: Bozo
+hit : You murder the goblin in cold blood.
+interact: Eyy, watchu human doin ere.

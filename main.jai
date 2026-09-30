@@ -132,7 +132,7 @@ look_choice :: (){
       print("%\n", it.name);
     } 
     case .LOCATION;
-    if CurrentLocation.Interactables.count == 0 || CurrentLocation.Characters.count == 0 {
+    if CurrentLocation.Interactables.count == 0 && CurrentLocation.Characters.count == 0 {
       print("This place seems empty. You can't see anyone or anything in here.\n");
       return;
     }
