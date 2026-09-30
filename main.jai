@@ -171,6 +171,10 @@ look_choice :: (){
       print("%\n", it.name);
     } 
     case .LOCATION;
+    if CurrentLocation.Interactables.count == 0 || CurrentLocation.Characters.count == 0 {
+      print("This place seems empty. You can't see anyone or anything in here.\n");
+      return;
+    }
     for CurrentLocation.Interactables{
       print("%\n", it.name);
     }
@@ -372,6 +376,7 @@ load_characters :: (sec : Section){
 
         key   := trim_right(slice(it, 0, colon_index), " \t");
         value := trim_left(slice(it, colon_index + 1, it.count - colon_index - 1), " \t");
+        value = trim(value, " \t\r");
         if key == "name" {
             current.name = value;
         } else if key == "hit" {
