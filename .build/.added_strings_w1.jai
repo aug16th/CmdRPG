@@ -1,0 +1,27 @@
+// Workspace: First Workspace
+
+#import "Default_Metaprogram";
+
+//
+// String added via add_build_string() from C:/Users/User/Documents/jai/modules/Metaprogram_Plugins.jai:172.
+//
+PLUGIN_INIT_STRING :: #string DONE
+            Plugin_0 :: #import "Autorun";
+            p_0: *Metaprogram_Plugin = Plugin_0.get_plugin();
+            array_add(results, p_0);
+            Plugin_1 :: #import "Check";
+            p_1: *Metaprogram_Plugin = Plugin_1.get_plugin();
+            array_add(results, p_1);
+
+DONE
+
+//
+// #insert text. Generated from C:/Users/User/Documents/jai/modules/Metaprogram_Plugins.jai:198.
+//
+            Plugin_0 :: #import "Autorun";
+            p_0: *Metaprogram_Plugin = Plugin_0.get_plugin();
+            array_add(results, p_0);
+            Plugin_1 :: #import "Check";
+            p_1: *Metaprogram_Plugin = Plugin_1.get_plugin();
+            array_add(results, p_1);
+
