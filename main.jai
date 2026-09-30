@@ -16,33 +16,16 @@ Interactable :: struct {
   name : string;
   Hit_Text : string;//make this a dialogue struct that has string and proc pointer
   Int_Text : string;
+  Int_Alias: string;//other commands to use for interacting
   Type : Interact_Type = .OBJECT;
 }
-//Placeholder Interactables--------------------------------------------------//
-Ale : Interactable : .{
-  name = "Ale",
-  Hit_Text = "You smack the glass off the table",
-  Int_Text = "You take a big sip of ale"
-};
 
-Bread : Interactable : .{
-  name = "Bread",
-  Hit_Text = "You smash the piece of bread to mush",
-  Int_Text = "You bite a chunk out of the bread"
-};
-//--------------------------------------------------------------------------//
 Character :: struct {
   #as using base : Interactable;
+  Int_Alias = "talk";
   Type = .CHARACTER;
-  //choice.ChoiceType = .CHARACTER;
 }
-//Placeholder Characters--------------------------------------------------//
-Bartender : Character : .{
-  name = "Bartender",
-  Hit_Text = "You hit the bartender in the head and he passes out.",
-  Int_Text = "No more ale for you laddie."
-};
-//-----------------------------------------------------------------------//
+
 State :: enum {
   WORLD;
   AREA;
@@ -72,29 +55,7 @@ CurrentState : State;
 CurrentArea : *Area;
 CurrentLocation : *Location;
 CurrentInteract : Interactable;
-// Tavern : [] choice = .[
-//   .{"Ale", "You drink some ale"},
-//   .{"Bread", "You eat some bread"},
-//   .{"Bartender", "\"The bar is closed. No more ale for ya laddie.\""}
-//   ];
 
-//Placeholder locations------------------------------------------------------//
-Town : *Area = *Town_data;
-Town_data : Area = .{
-  name = "Town",
-  desc = "You find yourself in a small town. There's not alot of people here.",
-  Locations = .[Tavern],
-  Characters = .[Bartender]
-};
-
-Tavern : *Location : *Tavern_data;
-Tavern_data : Location = .{
-  name = "Tavern",
-  desc = "You find yourself in a crowded tavern. What do you do?",
-  Interactables = .[Ale, Bread],
-  Characters = .[Bartender]
-  };
-//--------------------------------------------------------------------------//
 Add_Area :: (a : *Area){
   temparr : [..] *Area;
   for KnownAreas{
@@ -241,7 +202,7 @@ has_choice :: (s : string){
         remove_interactable(CurrentInteract);
         success = true;
       }
-      if same_string(s, "interact") {
+      if same_string(s, "interact") || same_string(s, CurrentInteract.Int_Alias){
         if CurrentInteract.Type == .CHARACTER {
           print("\"%\"", CurrentInteract.Int_Text);
         } else {
@@ -282,6 +243,7 @@ default_commands :: (){
       print("hit\n");
       print("leave\n");
       print("interact\n");
+      if CurrentInteract.Int_Alias.count > 0 print("%\n", CurrentInteract.Int_Alias);
   }
 }
 
@@ -409,6 +371,8 @@ load_characters :: (sec : Section){
             current.Hit_Text = value;
         } else if key == "interact" {
             current.Int_Text = value;
+        } else if key == "interact command" {
+            current.Int_Alias = value;
         }
     }
 }
@@ -441,6 +405,8 @@ load_interactables :: (sec : Section){
             current.Hit_Text = value;
         } else if key == "interact" {
             current.Int_Text = value;
+        } else if key == "interact command" {
+            current.Int_Alias = value;
         }
     }
 }
