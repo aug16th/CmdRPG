@@ -1,0 +1,5 @@
+#Define the starting location and known areas
+[Start]
+area: Town
+location: Tavern
+known areas: Town, GoblinVillage

@@ -1,0 +1,13 @@
+[Areas]
+GoblinVillage
+name: Goblin Village
+description: This is a messed up makeshift goblin settlement.
+locations: Campfire
+characters: Bartender
+
+[Locations]#Locations in goblin village
+Campfire
+name: Campfire
+description: There is a burning campfire
+interactables: Bread, Ale, Apple
+characters: Bartender

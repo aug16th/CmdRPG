@@ -1,0 +1,13 @@
+[Areas]
+Town
+name: Town
+description: You find yourself in a small town. There's not alot of people here.
+locations: Tavern
+characters: Bartender
+
+[Locations]#Locations in town
+Tavern
+name: Tavern
+description: You find yourself in a crowded tavern. What do you do? #This is what gets printed when the player is in this location.
+interactables: Bread, Ale, Apple
+characters: Bartender

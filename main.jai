@@ -266,6 +266,7 @@ remove_interactable :: (i : Interactable){
 }
 
 #import "File";
+#import "File_Utilities";
 
 Section :: struct {
     tag: string;
@@ -280,47 +281,84 @@ Load_Game_Data :: (){
         print("Error: Could not read the config file!\n");
         return;
     }
-  
-  game_data := sprint("Data/%", trim(file_contents, " \t\r"));
 
-  file_contents, success = read_entire_file(game_data);
+  directory := trim(file_contents, " \t\r");
 
-  if !success {
-        print("Error: Could not read the game data file!\n");
-        return;
-    }
+  filelist := file_list(sprint("Data/%",directory));//returns array of string of paths
 
-    // Print the file text out to the console
-    lines := split(file_contents, "\n");
-    for * lines {
-      it.* = strip_comment(it.*);
-    }
+  sections: [..] Section;
+  current: *Section;
+  start_loaded : bool;
 
-    sections: [..] Section;
-    current: *Section;
-    used_tags : [..] string;
-    for lines {
-      if it.count >= 2 && it[0] == #char "["{
-          new_section := array_add(*sections);
-          new_section.tag = slice(it, find_index_from_left(it, "[")+1, find_index_from_left(it, "]")-1);  // strip the [ and ]
-          if array_find(used_tags, new_section.tag) {//check for duplicate tags
-            print("Error: Duplicate tags found in game data!\n");
-            return;
-          }
-          array_add(*used_tags, new_section.tag);
-          current = new_section;
-          continue;
+  for filelist {
+    //print("%\n",it);
+    game_data := sprint(trim(it, " \t\r"));
+
+    file_contents, success = read_entire_file(game_data);
+
+    if !success {
+          print("Error: Could not read the game data file!\n");
+          return;
       }
 
-      if current {
-          if it.count > 0 array_add(*current.lines, it);
+      // Print the file text out to the console
+      lines := split(file_contents, "\n");
+      for * lines {
+        it.* = strip_comment(it.*);
+      }
+
+      
+      //used_tags : [..] string;
+      for lines {
+        if it.count >= 2 && it[0] == #char "["{
+            new_section := array_add(*sections);
+            new_section.tag = slice(it, find_index_from_left(it, "[")+1, find_index_from_left(it, "]")-1);  // strip the [ and ]
+            // if array_find(used_tags, new_section.tag) {//check for duplicate tags
+            //   print("Error: Duplicate tags found in game data!\n");
+            //   return;
+            // }
+            // array_add(*used_tags, new_section.tag);
+            current = new_section;
+            continue;
+        }
+
+        if current {
+            if it.count > 0 array_add(*current.lines, it);
+        }
       }
     }
     //load everyting under tag
-    load_characters(get_section(sections, "Characters"));
-    load_interactables(get_section(sections, "Interactables"));
-    load_locations(get_section(sections, "Locations"));
-    load_areas(get_section(sections, "Areas"));
+    location_secs : [..] Section;
+    area_secs : [..] Section;
+    for sections {
+      if it.tag == {
+        case "Characters";
+         load_characters(it);
+        case "Interactables";
+         load_interactables(it);
+        case "Locations";
+          array_add(*location_secs, it);
+         //load_locations(it);
+        case "Areas";
+          array_add(*area_secs, it);
+         //load_areas(it);
+        case ;
+         if !start_loaded && it.tag != "Start"{
+          print("Error: Unrecognized tag: %\n", it.tag);
+      } else if !start_loaded {
+          start_loaded = true;
+      } else {
+        print("Error: Multiple start tags found\n",);
+        return;
+        }
+      }
+    }
+    for location_secs {
+      load_locations(it);
+    }
+    for area_secs {
+      load_areas(it);
+    }
     load_start(get_section(sections, "Start"));
 }
 

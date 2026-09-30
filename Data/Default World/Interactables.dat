@@ -1,0 +1,18 @@
+[Interactables]
+Bread
+name : Bread
+hit : You smash the piece of bread to mush.
+interact : You bite a chunk out of the bread.
+interact command : eat
+
+Ale
+name : Ale
+hit : You smack the glass off the table.
+interact : You take a big sip of ale.
+interact command : drink
+
+Apple
+name : Apple
+hit : You hit the apple but it hits you back.
+interact : You take a bite of the apple.
+interact command : eat
