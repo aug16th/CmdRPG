@@ -187,6 +187,10 @@ look_choice :: (){
 //Process choices
 has_choice :: (s : string){
   //Check which state the player is in.
+  if same_string(s, "commands") {
+    default_commands();
+    return;
+  }
   if CurrentState == {
  //World----------------------------------------------------------------//
     case .WORLD;
@@ -257,6 +261,28 @@ has_choice :: (s : string){
       }
   }
   print("Unknown command: %\n", s);
+  default_commands();
+}
+
+default_commands :: (){
+  print("Available commands:\n",);
+  if CurrentState == {
+    case .WORLD;
+      print("look\n");
+    
+    case .AREA;
+      print("look\n");
+      print("leave\n");
+    
+    case .LOCATION;
+      print("look\n");
+      print("leave\n");
+
+    case .INTERACT;
+      print("hit\n");
+      print("leave\n");
+      print("interact\n");
+  }
 }
 
 remove_interactable :: (i : Interactable){
