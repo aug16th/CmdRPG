@@ -1,6 +1,13 @@
+#load "gameplayfuncs.jai";
+
 Interact_Type :: enum {
   OBJECT;
   CHARACTER;
+}
+
+response :: struct {
+  text : string;
+  func : func_call;
 }
 
 Interactable :: struct {
