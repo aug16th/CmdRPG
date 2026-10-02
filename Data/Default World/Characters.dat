@@ -2,6 +2,6 @@
 Bartender
 name : Bartender
 hit : You hit the bartender in the head and he passes out.
-interact : No more ale for you laddie.
+interact : I heard some goblins put together a settlement right outside of town.
 interact execution:
   known_area_add(GoblinVillage);
