@@ -21,6 +21,7 @@ run_func :: (func : func_call){
     }
 }
 
+//Exposed Gameplay functions -----------------------------------//
 gameplay_func :: (args : [] string){
   print("Function executed\n",);
   return;
