@@ -34,10 +34,6 @@ Set_Location :: (loc : *Location){
   CurrentLocation = loc;
   drefloc := loc.*;
 }
-//test func ----------------------------------//
-test : func_call : .{
-  fn = "gameplay_func"
-};
 
 main :: () {
   //init_commands();   // now generated automatically from every @GameCommand-tagged proc
@@ -46,7 +42,6 @@ main :: () {
   register_command("remove_from_location", remove_from_location);
 
   Load_Game_Data();
-  //run_func(test);
 
   //Input loop
     stdin_handle := GetStdHandle(STD_INPUT_HANDLE);

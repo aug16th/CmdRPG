@@ -13,7 +13,6 @@ register_command :: (name: string, fn: Command_Proc) {
 }
 
 run_func :: (func : func_call){
-  //print("number of available funcs %\n",function_Table.count);
   found, proc := table_find(*function_Table, func.fn);
     if found {
         proc(func.args);

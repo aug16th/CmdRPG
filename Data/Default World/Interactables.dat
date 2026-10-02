@@ -4,7 +4,9 @@ name : Bread
 hit : You smash the piece of bread to mush.
 hit execution :
   remove_from_location()
-interact : You bite a chunk out of the bread.
+interact : You gobble up the loaf of bread. It was pretty stale.
+interact execution :
+  remove_from_location()
 interact command : eat
 
 Ale
@@ -21,4 +23,6 @@ hit : You hit the apple but it hits you back.
 hit execution :
   remove_from_location()
 interact : You take a bite of the apple.
+interact execution :
+  remove_from_location()
 interact command : eat
