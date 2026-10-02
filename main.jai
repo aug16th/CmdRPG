@@ -20,11 +20,13 @@ CurrentInteract : Interactable;
 
 Add_Area :: (a : *Area){
   temparr : [..] *Area;
-  for KnownAreas{
-      array_add(*temparr, it);
-  }
-  array_add(*temparr, a);
-  KnownAreas = temparr;
+  if !array_find(KnownAreas, a){//check if area already known
+    for KnownAreas{
+        array_add(*temparr, it);
+    }
+    array_add(*temparr, a);
+    KnownAreas = temparr;
+  } //else print("area already known\n",);
 }
 
 Set_Location :: (loc : *Location){

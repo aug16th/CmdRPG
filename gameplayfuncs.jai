@@ -13,7 +13,7 @@ register_command :: (name: string, fn: Command_Proc) {
 }
 
 run_func :: (func : func_call){
-  print("number of available funcs %\n",function_Table.count);
+  //print("number of available funcs %\n",function_Table.count);
   found, proc := table_find(*function_Table, func.fn);
     if found {
         proc(func.args);
@@ -34,7 +34,11 @@ known_area_add :: (args : [] string){
   } else {
     var := args[0];
     found, area := table_find(*Areas_Table, var);
-    if found Add_Area(area); else print("Error: Area not found\n",);
+    if found{
+      Add_Area(area);
+      print("\n- You now know where % is -\n", area.name);
+      //maybe eventually expose this in config so designer can decide what should print when player unlocks location
+    }else print("Error: Area not found\n",);
   }
 }
 

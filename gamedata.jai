@@ -82,16 +82,10 @@ Load_Game_Data :: (){
       }
 
       
-      //used_tags : [..] string;
       for lines {
         if it.count >= 2 && it[0] == #char "["{
             new_section := array_add(*sections);
             new_section.tag = slice(it, find_index_from_left(it, "[")+1, find_index_from_left(it, "]")-1);  // strip the [ and ]
-            // if array_find(used_tags, new_section.tag) {//check for duplicate tags
-            //   print("Error: Duplicate tags found in game data!\n");
-            //   return;
-            // }
-            // array_add(*used_tags, new_section.tag);
             current = new_section;
             continue;
         }
