@@ -9,7 +9,6 @@ Command_Proc :: #type (args: [] string);
 function_Table: Table(string, Command_Proc);//table of functions
 
 register_command :: (name: string, fn: Command_Proc) {
-  print("function added\n",);
     table_add(*function_Table, name, fn);
 }
 
@@ -37,4 +36,8 @@ known_area_add :: (args : [] string){
     found, area := table_find(*Areas_Table, var);
     if found Add_Area(area); else print("Error: Area not found\n",);
   }
+}
+
+remove_from_location :: (args : [] string){
+  remove_interactable(CurrentInteract);
 }

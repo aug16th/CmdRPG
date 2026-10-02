@@ -39,7 +39,10 @@ test : func_call : .{
 
 main :: () {
   //init_commands();   // now generated automatically from every @GameCommand-tagged proc
-  //register_command("gameplay_func", gameplay_func);
+  register_command("gameplay_func", gameplay_func);
+  register_command("known_area_add", known_area_add);
+  register_command("remove_from_location", remove_from_location);
+
   Load_Game_Data();
   //run_func(test);
 
@@ -167,15 +170,21 @@ has_choice :: (s : string){
     case .INTERACT;
     success := false;
       if same_string(s, "hit") {
-        print("%", CurrentInteract.Hit_Text);
-        remove_interactable(CurrentInteract);
+        print("%", CurrentInteract.Hit_Text.text);
+        for CurrentInteract.Hit_Text.func {
+          run_func(it);
+        }
+        //remove_interactable(CurrentInteract);
         success = true;
       }
       if same_string(s, "interact") || same_string(s, CurrentInteract.Int_Alias){
         if CurrentInteract.Type == .CHARACTER {
-          print("\"%\"", CurrentInteract.Int_Text);
+          print("\"%\"", CurrentInteract.Int_Text.text);
         } else {
-            print("%", CurrentInteract.Int_Text);
+            print("%", CurrentInteract.Int_Text.text);
+        }
+        for CurrentInteract.Int_Text.func {
+          run_func(it);
         }
         success = true;
         

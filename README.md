@@ -4,3 +4,11 @@ This is a really simple commandline game for windows. It reads all the world dat
 You can only have one [Start] tag and it's needed to determine the starting location.
 
 You can define which file you want to load in Data/Config.ini. This means you can create multiple folders for different worlds and choose which folder to load.
+
+# Exposed Functions
+
+known_area_add(Area)
+Adds an area to the player's list of known areas allowing them to travel there. The common usecase is when the player is told about the location, reading a map etc.
+
+remove_from_location()
+This removes the current interactable from the current location. Common usecase is when hitting something or interacting/eating/drinking something.

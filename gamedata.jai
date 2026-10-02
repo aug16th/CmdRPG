@@ -7,13 +7,13 @@ Interact_Type :: enum {
 
 response :: struct {
   text : string;
-  func : func_call;
+  func : [] func_call;//an array of calls so designers can have multiple
 }
 
 Interactable :: struct {
   name : string;
-  Hit_Text : string;//make this a dialogue struct that has string and proc pointer
-  Int_Text : string;
+  Hit_Text : response;//make this a dialogue struct that has string and proc pointer
+  Int_Text : response;
   Int_Alias: string;//other commands to use for interacting
   Type : Interact_Type = .OBJECT;
 }
@@ -152,33 +152,68 @@ Characters_Table: Table(string, *Character);//table of characters
 
 load_characters :: (sec : Section){
   current: *Character;
+  collecting_field := "";   // "" means not currently collecting; otherwise "hit" or "interact"
+  collection : [..] func_call;
 
     for sec.lines {
         colon_index := find_index_from_left(it, ":");
 
+        // If we're in the middle of collecting a call-list block...
+        if collecting_field != "" {
+            if colon_index == -1 {
+                // No colon: still inside the block, this is one call line.
+                parsed := parse_call(trim(it, " \t\r"));
+                array_add(*collection, parsed);
+                continue;
+            } else {
+                // A real key : value line showed up — the block just ended.
+                if collecting_field == "hit" {
+                  current.Hit_Text.func = collection;
+                } else if collecting_field == "interact"{
+                  current.Int_Text.func = collection;
+                }
+                collection.count = 0;
+                collecting_field = "";
+                // fall through to normal handling below, for *this* line
+            }
+        }
+
         if colon_index == -1 {
-            // No colon means this line is a new record header (e.g. "Character1")
             current = New(Character);
-            var := trim(it, " \t\r");   // strip leading/trailing whitespace and stray \r
-            table_add(*Characters_Table, var, current);   // register once we know the name
+            var := trim(it, " \t\r");
+            table_add(*Characters_Table, var, current);
             continue;
         }
 
-        if !current continue;   // a field line appeared before any header — skip defensively
+        if !current continue;
 
         key   := trim_right(slice(it, 0, colon_index), " \t");
         value := trim_left(slice(it, colon_index + 1, it.count - colon_index - 1), " \t");
         value = trim(value, " \t\r");
+
         if key == "name" {
             current.name = value;
         } else if key == "hit" {
-            current.Hit_Text = value;
+            current.Hit_Text.text = value;
+        } else if key == "hit execution" {
+            collecting_field = "hit";
         } else if key == "interact" {
-            current.Int_Text = value;
+            current.Int_Text.text = value;
+        } else if key == "interact execution" {
+            collecting_field = "interact";
         } else if key == "interact command" {
             current.Int_Alias = value;
         }
     }
+    //this needs to run one more time when section complete to assign the functions
+    if collecting_field != ""{
+      if collecting_field == "hit" {
+                  current.Hit_Text.func = collection;
+                } else if collecting_field == "interact"{
+                  current.Int_Text.func = collection;
+                }
+    }
+    
 }
 
 //Interactable Table-------------------------------------------//
@@ -186,9 +221,31 @@ Interactables_Table: Table(string, *Interactable);//table of characters
 
 load_interactables :: (sec : Section){
   current: *Interactable;
+  collecting_field := "";   // "" means not currently collecting; otherwise "hit" or "interact"
+  collection : [..] func_call;
 
     for sec.lines {
         colon_index := find_index_from_left(it, ":");
+
+        // If we're in the middle of collecting a call-list block...
+        if collecting_field != "" {
+            if colon_index == -1 {
+                // No colon: still inside the block, this is one call line.
+                parsed := parse_call(trim(it, " \t\r"));
+                array_add(*collection, parsed);
+                continue;
+            } else {
+                // A real key : value line showed up — the block just ended.
+                if collecting_field == "hit" {
+                  current.Hit_Text.func = collection;
+                } else if collecting_field == "interact"{
+                  current.Int_Text.func = collection;
+                }
+                collection.count = 0;
+                collecting_field = "";
+                // fall through to normal handling below, for *this* line
+            }
+        }
 
         if colon_index == -1 {
             // No colon means this line is a new record header (e.g. "Character1")
@@ -203,15 +260,29 @@ load_interactables :: (sec : Section){
         key   := trim_right(slice(it, 0, colon_index), " \t");
         value := trim_left(slice(it, colon_index + 1, it.count - colon_index - 1), " \t");
         value = trim(value, " \t\r");
+
         if key == "name" {
             current.name = value;
         } else if key == "hit" {
-            current.Hit_Text = value;
+            current.Hit_Text.text = value;
+        } else if key == "hit execution" {
+            collecting_field = "hit";
         } else if key == "interact" {
-            current.Int_Text = value;
+            current.Int_Text.text = value;
+        } else if key == "interact execution" {
+            collecting_field = "interact";
         } else if key == "interact command" {
             current.Int_Alias = value;
         }
+    }
+    //this needs to run one more time when section complete to assign the functions
+
+    if collecting_field != ""{
+      if collecting_field == "hit" {
+                  current.Hit_Text.func = collection;
+                } else if collecting_field == "interact"{
+                  current.Int_Text.func = collection;
+                }
     }
 }
 
@@ -331,4 +402,31 @@ load_start :: (sec : Section){
           } 
     }
   }
+}
+
+parse_call :: (s: string) -> func_call {
+    result: func_call;
+    ns := trim(s, " \t\r");
+
+    paren_index := find_index_from_left(ns, "(");
+    if paren_index == -1 {
+        result.fn = ns;
+        return result;   // no args, e.g. "flee"
+    }
+
+    result.fn = trim_right(slice(s, 0, paren_index), " \t");
+
+    close_index := find_index_from_right(ns, ")");
+    inner := slice(ns, paren_index + 1, close_index - paren_index - 1);
+
+    args: [..] string;
+    if inner.count > 0 {
+        pieces := split(inner, ",");
+        for pieces {
+            array_add(*args, trim(it, " \t\r"));
+        }
+    }
+    result.args = args;   // [..] string implicitly coerces to [] string
+
+    return result;
 }
