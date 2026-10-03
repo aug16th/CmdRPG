@@ -47,11 +47,7 @@ Set_Location :: (loc : *Location){
 }
 
 main :: () {
-  //init_commands();   // now generated automatically from every @GameCommand-tagged proc
-  register_command("gameplay_func", gameplay_func);
-  register_command("known_area_add", known_area_add);
-  register_command("remove_from_location", remove_from_location);
-  register_command("add_location_to_area",add_location_to_area);
+  init_commands();   // now generated automatically from every @GameCommand-tagged proc
 
   Load_Game_Data();
 

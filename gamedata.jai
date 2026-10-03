@@ -166,7 +166,8 @@ load_characters :: (sec : Section){
                 } else if collecting_field == "interact"{
                   current.Int_Text.func = collection;
                 }
-                collection.count = 0;
+                fresh : [..] func_call;
+                collection = fresh;
                 collecting_field = "";
                 // fall through to normal handling below, for *this* line
             }
@@ -235,7 +236,8 @@ load_interactables :: (sec : Section){
                 } else if collecting_field == "interact"{
                   current.Int_Text.func = collection;
                 }
-                collection.count = 0;
+                fresh : [..] func_call;
+                collection = fresh;
                 collecting_field = "";
                 // fall through to normal handling below, for *this* line
             }

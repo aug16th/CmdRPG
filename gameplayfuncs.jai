@@ -27,6 +27,7 @@ gameplay_func :: (args : [] string){
   return;
 }
 
+
 known_area_add :: (args : [] string){
   if args.count < 1 {
     print("Error: not enough arguments\n",);
@@ -40,11 +41,13 @@ known_area_add :: (args : [] string){
       //maybe eventually expose this in config so designer can decide what should print when player unlocks location
     }else print("Error: Area not found\n",);
   }
-}
+} @GameCommand 
+
 
 remove_from_location :: (args : [] string){
   remove_interactable(CurrentInteract);
-}
+} @GameCommand
+
 
 add_location_to_area :: (args : [] string){
   if args.count < 2 {
@@ -60,4 +63,4 @@ add_location_to_area :: (args : [] string){
       print("\n- You now know where % is -\n", loc.name);
     } else print("Error: Area or location not found\n",);
   }
-}
+} @GameCommand
