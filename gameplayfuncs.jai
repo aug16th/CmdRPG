@@ -45,3 +45,19 @@ known_area_add :: (args : [] string){
 remove_from_location :: (args : [] string){
   remove_interactable(CurrentInteract);
 }
+
+add_location_to_area :: (args : [] string){
+  if args.count < 2 {
+    print("Error: not enough arguments\n",);
+    return;
+  } else {
+    a := args[0];
+    l := args[1];
+    found, area := table_find(*Areas_Table, a);
+    found2, loc := table_find(*Locations_Table, l);
+    if found && found2 {
+      Add_Location(area, loc);
+      print("\n- You now know where % is -\n", loc.name);
+    } else print("Error: Area or location not found\n",);
+  }
+}

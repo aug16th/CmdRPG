@@ -29,6 +29,15 @@ Add_Area :: (a : *Area){
   } //else print("area already known\n",);
 }
 
+Add_Location :: (a : *Area, l : *Location){
+  temparr : [..] *Location;
+  for a.Locations {
+    array_add(*temparr, it);
+  }
+  array_add(*temparr, l);
+  a.Locations = temparr;
+}
+
 Set_Location :: (loc : *Location){
   CurrentState = .LOCATION;
   CurrentLocation = loc;
@@ -40,6 +49,7 @@ main :: () {
   register_command("gameplay_func", gameplay_func);
   register_command("known_area_add", known_area_add);
   register_command("remove_from_location", remove_from_location);
+  register_command("add_location_to_area",add_location_to_area);
 
   Load_Game_Data();
 

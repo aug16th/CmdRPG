@@ -2,6 +2,7 @@
 Bartender
 name : Bartender
 hit : You hit the bartender in the head and he passes out.
-interact : I heard some goblins put together a settlement right outside of town.
+interact : I heard the shop next door is deserted. Also a bunch of goblins put together a settlement outside of town.
 interact execution:
-  known_area_add(GoblinVillage);
+  add_location_to_area(Town, Shop)
+  known_area_add(GoblinVillage)
