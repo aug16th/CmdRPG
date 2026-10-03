@@ -26,16 +26,18 @@ Add_Area :: (a : *Area){
     }
     array_add(*temparr, a);
     KnownAreas = temparr;
-  } //else print("area already known\n",);
+  } //else print("\narea already known\n",);
 }
 
 Add_Location :: (a : *Area, l : *Location){
-  temparr : [..] *Location;
-  for a.Locations {
-    array_add(*temparr, it);
-  }
-  array_add(*temparr, l);
-  a.Locations = temparr;
+  if !array_find(a.Locations, l){
+    temparr : [..] *Location;
+    for a.Locations {
+      array_add(*temparr, it);
+    }
+    array_add(*temparr, l);
+    a.Locations = temparr;
+  } //else print("\nlocation already known\n",);
 }
 
 Set_Location :: (loc : *Location){
