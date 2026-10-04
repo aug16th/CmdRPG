@@ -2,7 +2,20 @@
 Bartender
 name : Bartender
 hit : You hit the bartender in the head and he passes out.
-interact : I heard the shop next door is deserted. Also a bunch of goblins put together a settlement outside of town.
+interact : You're a thirsty one ain't ya? Heres another drink.
+interact execution:
+  add_item_to_location(Tavern, Ale)
+
+Town Guard
+name : Town Guard
+hit : You hit the guard in the head and he passes out.
+interact : i heard theres a bunch of goblins setting up camp right outside of town.
+interact execution:
+  known_area_add(GoblinVillage)
+
+Shopkeeper
+name : Shopkeeper
+hit : You hit the shopkeeper in the head and he passes out.
+interact : My shop just got robbed next door! There's absolutely nothing left.
 interact execution:
   add_location_to_area(Town, Shop)
-  known_area_add(GoblinVillage)

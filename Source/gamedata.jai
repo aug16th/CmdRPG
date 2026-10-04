@@ -150,11 +150,13 @@ load_characters :: (sec : Section){
   collection : [..] func_call;
 
     for sec.lines {
+      //if it.count == 0 return;
         colon_index := find_index_from_left(it, ":");
+        has_paren := find_index_from_left(it, "(") != -1;
 
         // If we're in the middle of collecting a call-list block...
         if collecting_field != "" {
-            if colon_index == -1 {
+            if colon_index == -1 && has_paren {
                 // No colon: still inside the block, this is one call line.
                 parsed := parse_call(trim(it, " \t\r"));
                 array_add(*collection, parsed);
@@ -221,10 +223,11 @@ load_interactables :: (sec : Section){
 
     for sec.lines {
         colon_index := find_index_from_left(it, ":");
+        has_paren := find_index_from_left(it, "(") != -1;
 
         // If we're in the middle of collecting a call-list block...
         if collecting_field != "" {
-            if colon_index == -1 {
+            if colon_index == -1 && has_paren {
                 // No colon: still inside the block, this is one call line.
                 parsed := parse_call(trim(it, " \t\r"));
                 array_add(*collection, parsed);
@@ -322,6 +325,7 @@ load_locations :: (sec : Section){
           for arr {
             succ, obj := table_find(*Characters_Table, trim(it, " \t\r"));
             if succ array_add(*objarr, obj);
+            //else print("%\n",trim(it, " \t\r"));
           }
             current.Characters = objarr;
         }

@@ -64,3 +64,19 @@ add_location_to_area :: (args : [] string){
     } else print("Error: Area or location not found\n",);
   }
 } @GameCommand
+
+add_item_to_location :: (args : [] string){
+  if args.count < 2 {
+    print("Error: not enough arguments\n",);
+    return;
+  } else {
+    l := args[0];
+    i := args[1];
+    found, loc := table_find(*Locations_Table, l);
+    found2, inte := table_find(*Interactables_Table, i);
+    if found && found2 {
+      Add_Interactable_To_Location(loc, inte.*);
+      print("\n- There is now a % here -\n", inte.name);
+    } else print("Error: location or interactable not found\n",);
+  } 
+} @GameCommand

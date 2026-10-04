@@ -18,3 +18,7 @@ This removes the current interactable from the current location. Common usecase 
 add_location_to_area(Area, Location)
 
 Adds the Location to the Area. Common uses is when a hidden location is revealed to the player. Area needs to be included because sometimes you might want to reveal a hidden location in a different area from the current one you are at.
+
+add_item_to_location(Location, Interactable)
+
+Adds an item to the specified location. This can be used if the player orders something from the bartender. It can also be used to spawn objects after talking to someone.

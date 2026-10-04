@@ -40,6 +40,15 @@ Add_Location :: (a : *Area, l : *Location){
   } //else print("\nlocation already known\n",);
 }
 
+Add_Interactable_To_Location :: (l : *Location, i : Interactable){
+  result : [..] Interactable;
+  for l.Interactables {
+    array_add(*result, it);
+  }
+  array_add(*result, i);
+  l.Interactables = result;
+}
+
 Set_Location :: (loc : *Location){
   CurrentState = .LOCATION;
   CurrentLocation = loc;
@@ -232,10 +241,11 @@ default_commands :: (){
 
 remove_interactable :: (i : Interactable){
   temparr : [..] Interactable;
+  removed : bool;
   for CurrentLocation.Interactables{
-    if it.name != i.name {
+    if it.name != i.name || removed {
       array_add(*temparr, it);
-    }
+    } else removed = true;
   }
   CurrentLocation.Interactables = temparr;
 
