@@ -39,6 +39,12 @@ Location :: struct {
   Can_Leave : bool;
 }
 
+Encounter :: struct {
+  char  : Character;
+  enemy : string;
+  desc  : string;
+}
+
 #import "File";
 #import "File_Utilities";
 

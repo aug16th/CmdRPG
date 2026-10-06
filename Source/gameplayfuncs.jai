@@ -80,3 +80,19 @@ add_item_to_location :: (args : [] string){
     } else print("Error: location or interactable not found\n",);
   } 
 } @GameCommand
+
+start_encounter :: (args : [] string){
+  if args.count < 3 {
+    print("Error: not enough arguments\n",);
+    return;
+  } else {
+    e := args[1];
+    d := args[2];
+    found, char := table_find(*Characters_Table, args[0]);
+
+    if found {
+      var : Encounter = .{char = char, enemy = e, desc = d};
+      Start_Encounter(var);
+    } else print("Error: Character not found\n");
+  }
+} @GameCommand

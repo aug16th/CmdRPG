@@ -15,7 +15,7 @@ characters: BozoGoblin
 [Characters]
 BozoGoblin
 name: Bozo
-hit : You murder the goblin in cold blood.
+hit : You hit the goblin.
 hit execution:
-  remove_from_location()
+  start_encounter(BozoGoblin,goblin, You are now in an encounter against a goblin)
 interact: Eyy, watchu human doin ere.

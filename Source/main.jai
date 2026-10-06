@@ -17,6 +17,7 @@ CurrentState : State;
 CurrentArea : *Area;
 CurrentLocation : *Location;
 CurrentInteract : Interactable;
+CurrentEncounter: Encounter;
 
 Add_Area :: (a : *Area){
   temparr : [..] *Area;
@@ -49,10 +50,14 @@ Add_Interactable_To_Location :: (l : *Location, i : Interactable){
   l.Interactables = result;
 }
 
+Start_Encounter :: (e : Encounter){
+  CurrentEncounter = e;
+  CurrentState = .ENCOUNTER;
+}
+
 Set_Location :: (loc : *Location){
   CurrentState = .LOCATION;
   CurrentLocation = loc;
-  drefloc := loc.*;
 }
 
 main :: () {
@@ -78,6 +83,9 @@ main :: () {
 
         case .INTERACT;
           print("What do you do with the %\n", CurrentInteract.name);
+        
+        case .ENCOUNTER;
+          print("%\n", CurrentEncounter.desc);
       }
       print(">");
 
@@ -208,10 +216,26 @@ has_choice :: (s : string){
         success = true;
       }
       print("\n");
+      if success && CurrentState == .ENCOUNTER return;//don't set back to location if in encounter
       if success {
       CurrentState = .LOCATION;
       return;
       }
+  //Interact------------------------------------------------------------//   
+    case .ENCOUNTER;
+      if same_string(s, "run"){
+        print("You run away from the %\n", CurrentEncounter.enemy);
+        CurrentState = .AREA;
+        return;
+      }   
+      if same_string(s, "fight"){
+        print("You defeat the %\n", CurrentEncounter.enemy);
+        remove_interactable(CurrentEncounter.char);
+        CurrentState = .LOCATION;
+        fresh : Encounter;
+        CurrentEncounter = fresh;
+        return;
+      } 
   }
   print("Unknown command: %\n", s);
   default_commands();
@@ -236,6 +260,10 @@ default_commands :: (){
       print("leave\n");
       print("interact\n");
       if CurrentInteract.Int_Alias.count > 0 print("%\n", CurrentInteract.Int_Alias);
+
+    case .ENCOUNTER;
+      print("run\n");
+      print("fight\n");
   }
 }
 
