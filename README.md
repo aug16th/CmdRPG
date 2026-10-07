@@ -5,6 +5,10 @@ You can only have one [Start] tag and it's needed to determine the starting loca
 
 You can define which file you want to load in Data/Config.ini. This means you can create multiple folders for different worlds and choose which folder to load.
 
+# Grudge System
+
+All [Characters] can have and array of acquaintances. If the character dies to the player, their acquantances will automatically attack the player when they are in the same location.
+
 # Exposed Functions
 
 known_area_add(Area)

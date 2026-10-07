@@ -2,6 +2,7 @@
 #import "Windows";
 
 #load   "gamedata.jai";//data structs and loading
+#load   "ButterflyEngine.jai";
 
 State :: enum {
   WORLD;
@@ -58,6 +59,7 @@ Start_Encounter :: (e : Encounter){
 Set_Location :: (loc : *Location){
   CurrentState = .LOCATION;
   CurrentLocation = loc;
+  check_grudges(loc);
 }
 
 main :: () {
@@ -230,10 +232,14 @@ has_choice :: (s : string){
       }   
       if same_string(s, "fight"){
         print("You defeat the %\n", CurrentEncounter.enemy);
+        for CurrentEncounter.char.Acquaintances {
+          it.Grudge = true;
+        }
         remove_interactable(CurrentEncounter.char);
         CurrentState = .LOCATION;
         fresh : Encounter;
         CurrentEncounter = fresh;
+        check_grudges(CurrentLocation);//check if someone else joins because you killed their friend
         return;
       } 
   }
@@ -277,7 +283,7 @@ remove_interactable :: (i : Interactable){
   }
   CurrentLocation.Interactables = temparr;
 
-  temparr2 : [..] Character;
+  temparr2 : [..] *Character;
   for CurrentLocation.Characters{
     if it.name != i.name {
       array_add(*temparr2, it);

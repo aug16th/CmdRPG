@@ -2,8 +2,8 @@
 GoblinVillage
 name: Goblin Village
 description: This is a messed up makeshift goblin settlement.
-locations: Campfire
-characters: BozoGoblin
+locations: Campfire, Hut
+characters: BozoGoblin, PeepoGoblin
 
 [Locations]#Locations in goblin village
 Campfire
@@ -12,6 +12,12 @@ description: There is a burning campfire
 interactables: Bread, Ale, Apple
 characters: BozoGoblin
 
+Hut
+name: Hut
+description: Looks like a goblin made this hut.
+interactables: Bread, Ale, Apple
+characters: PeepoGoblin
+
 [Characters]
 BozoGoblin
 name: Bozo
@@ -19,3 +25,12 @@ hit : You hit the goblin.
 hit execution:
   start_encounter(BozoGoblin,goblin, You are now in an encounter against a goblin)
 interact: Eyy, watchu human doin ere.
+acquaintances: PeepoGoblin
+
+PeepoGoblin
+name: Peepo
+hit : You hit the goblin.
+hit execution:
+  start_encounter(PeepoGoblin,goblin, You are now in an encounter against a goblin)
+interact: Eyy, watchu human doin ere.
+acquaintances: BozoGoblin

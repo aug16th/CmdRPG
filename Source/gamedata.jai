@@ -22,6 +22,8 @@ Character :: struct {
   #as using base : Interactable;
   Int_Alias = "talk";
   Type = .CHARACTER;
+  Acquaintances : [] *Character; //Charactersa that know this chracter and might come for revenge
+  Grudge : bool;
 }
 
 Area :: struct {
@@ -35,7 +37,7 @@ Location :: struct {
   name : string;
   desc : string;
   Interactables : [] Interactable;
-  Characters : [] Character;
+  Characters : [] *Character;
   Can_Leave : bool;
 }
 
@@ -129,6 +131,7 @@ Load_Game_Data :: (){
         }
       }
     }
+    load_acquaintances();
     for location_secs {
       load_locations(it);
     }
@@ -145,6 +148,13 @@ strip_comment :: (line: string) -> string {
     result.count = hash_index;
     return result;
 }
+
+acquaintance_data :: struct {
+  char : *Character;
+  Acquaintances : []string;
+}
+
+loaded_acquaintance : [..] acquaintance_data;
 
 #import "Hash_Table";
 //Character Table-------------------------------------------//
@@ -206,6 +216,13 @@ load_characters :: (sec : Section){
             collecting_field = "interact";
         } else if key == "interact command" {
             current.Int_Alias = value;
+        } else if key == "acquaintances" {
+            arr := split(value,",");
+            data : acquaintance_data;
+            data.char = current;
+            data.Acquaintances = arr;
+            array_add(*loaded_acquaintance, data);
+            
         }
     }
     //this needs to run one more time when section complete to assign the functions
@@ -217,6 +234,18 @@ load_characters :: (sec : Section){
                 }
     }
     
+}
+
+load_acquaintances :: () {
+  for loaded_acquaintance {
+  objarr : [..] *Character;
+            for it.Acquaintances {
+              succ, obj := table_find(*Characters_Table, trim(it, " \t\r"));
+              if succ array_add(*objarr, obj);
+            }
+              it.char.Acquaintances = objarr;
+  }
+  array_free(loaded_acquaintance);
 }
 
 //Interactable Table-------------------------------------------//
@@ -327,7 +356,7 @@ load_locations :: (sec : Section){
             current.Interactables = objarr;
         } else if key == "characters" {
           arr := split(value,",");
-          objarr : [..] Character;
+          objarr : [..] *Character;
           for arr {
             succ, obj := table_find(*Characters_Table, trim(it, " \t\r"));
             if succ array_add(*objarr, obj);
