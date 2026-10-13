@@ -55,17 +55,7 @@ Section :: struct {
     lines: [..] string;
 }
 
-Load_Game_Data :: (){
-
-  file_contents, success := read_entire_file("Data/Config.ini");
-
-  if !success {
-        print("Error: Could not read the config file!\n");
-        return;
-    }
-
-  directory := trim(file_contents, " \t\r");
-
+Load_Game_Data :: (directory : string){
   filelist := file_list(sprint("Data/%",directory));//returns array of string of paths
 
   sections: [..] Section;
@@ -73,10 +63,9 @@ Load_Game_Data :: (){
   start_loaded : bool;
 
   for filelist {
-    //print("%\n",it);
     game_data := sprint(trim(it, " \t\r"));
 
-    file_contents, success = read_entire_file(game_data);
+    file_contents, success := read_entire_file(game_data);
 
     if !success {
           print("Error: Could not read the game data file!\n");
@@ -245,7 +234,7 @@ load_acquaintances :: () {
             }
               it.char.Acquaintances = objarr;
   }
-  array_free(loaded_acquaintance);
+  array_free(loaded_acquaintance);//free the array since its global
 }
 
 //Interactable Table-------------------------------------------//

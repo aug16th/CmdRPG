@@ -2,7 +2,23 @@
 #import "Windows";
 
 #load   "gamedata.jai";//data structs and loading
-#load   "ButterflyEngine.jai";
+#load   "ButterflyEngine.jai";//this needs gamedata.jai
+#load   "DialogueGenerator.jai";
+
+#import "Random";
+
+array_random :: (arr: [] $T) -> T {
+    if arr.count == 0 {
+        empty: T;
+        return empty;
+    }
+
+    index := cast(int) (random_get() % cast(u64) arr.count);
+    //print("count=% index=%\n", arr.count, index);
+    //for arr print("  [%] %\n", it_index, it);
+
+    return arr[index];
+}
 
 State :: enum {
   WORLD;
@@ -63,9 +79,25 @@ Set_Location :: (loc : *Location){
 }
 
 main :: () {
+  //random_seed(current_time_monotonic());//creates a random seed
   init_commands();   // now generated automatically from every @GameCommand-tagged proc
 
-  Load_Game_Data();
+  config, config_success := read_entire_file("Data/Config.ini");
+
+  if !config_success {
+        print("Error: Could not read the config file!\n");
+        return;
+  }
+
+  //right now config order is hardcoded
+  gameconfig := trim(split(config, "\n")[0], " \t\r");
+  dialogueconfig := trim(split(config, "\n")[1], " \t\r");
+  
+
+  Load_Game_Data(gameconfig);
+  Load_Dialogue_Data(dialogueconfig);
+
+  //print("%\n", generate_dialogue("Greetings",.[]));
 
   //Input loop
     stdin_handle := GetStdHandle(STD_INPUT_HANDLE);
@@ -203,7 +235,7 @@ has_choice :: (s : string){
       }
       if same_string(s, "interact") || same_string(s, CurrentInteract.Int_Alias){
         if CurrentInteract.Type == .CHARACTER {
-          print("\"%\"", CurrentInteract.Int_Text.text);
+          print("\"%\"", generate_dialogue("Greetings",.[]));//CurrentInteract.Int_Text.text);
         } else {
             print("%", CurrentInteract.Int_Text.text);
         }
