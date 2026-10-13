@@ -8,6 +8,7 @@ Dialogue_Table : Table(string, Dialogue_Set);
 
 generate_dialogue :: (DType: string, tags : [] string) -> string {
   //print("generating dialogue\n");
+  generated : string;
   op : string;
   ad : string;
   cl : string;
@@ -16,7 +17,9 @@ generate_dialogue :: (DType: string, tags : [] string) -> string {
   if succ {
     if tags.count > 0 {
       //compare tags
-      print("comparing tags\n");
+      op = pick_by_tags(*obj.Opener,  tags);
+      ad = pick_by_tags(*obj.Address, tags);
+      cl = pick_by_tags(*obj.Closer,  tags);
     } else {
       succ1, arr1 := table_find(*obj.Opener, "default");
       if succ1 && arr1.count > 0 op = array_random(arr1);
@@ -28,8 +31,13 @@ generate_dialogue :: (DType: string, tags : [] string) -> string {
       if succ3 && arr3.count > 0 cl = array_random(arr3);
     }
   }
+  if ad.count > 0 {
+    generated = sprint("% %, %", op, ad, cl);
+  } else {
+    generated = sprint("% %", op, cl);
+  }
 
-  generated := sprint("% %, %", op, ad, cl);
+  
   return generated;
 }
 
@@ -73,9 +81,17 @@ Load_Dialogue_Data :: (directory : string) {
         if current_table {
           current_string := trim(it, " \t\r");
           if current_string.count == 0 continue;   // skip blank lines
+          open := find_index_from_left(it, "(");
+          close := find_index_from_right(current_string, ")");
 
-          if find_index_from_left(it, "(") != -1 {
-            //get the tags inside
+          if open != -1 && close > open {
+            text  := trim(slice(current_string, 0, open), " \t\r");
+            inner := slice(current_string, open + 1, close - open - 1);
+
+            for split(inner, ",") {
+              arr := find_or_add(current_table, trim(it, " \t\r"));
+              array_add(arr, text); 
+            }
           } else {
             // use default tag. find_or_add returns a pointer to the stored
             // [..] string, creating an empty entry if the key is new.
@@ -88,4 +104,43 @@ Load_Dialogue_Data :: (directory : string) {
 
     table_add(*Dialogue_Table, current_collection, dialogueset);
   }
+}
+
+pick_by_tags :: (table: *Table(string, [..] string), tags: [] string) -> string {
+  counts: Table(string, int);
+  defer deinit(*counts);
+
+  // Tally: how many of the requested tags' arrays contain each line
+  for tag: tags {
+    found, arr := table_find(table, trim(tag, " \t\r"));
+    if !found continue;
+
+    for line: arr {
+      c := find_or_add(*counts, line);
+      c.* += 1;
+    }
+  }
+
+  // Collect every line tied for the highest tally
+  best := 0;
+  candidates: [..] string;
+  defer array_reset(*candidates);
+
+  for count, line: counts {
+    if count > best {
+      best = count;
+      candidates.count = 0;      // new leader, drop the old ties
+      array_add(*candidates, line);
+    } else if count == best {
+      array_add(*candidates, line);
+    }
+  }
+
+  if candidates.count > 0  return array_random(candidates);
+
+  // No requested tag had any lines, so fall back to the default pool
+  found, defaults := table_find(table, "default");
+  if found && defaults.count > 0  return array_random(defaults);
+
+  return "";
 }

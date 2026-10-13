@@ -79,7 +79,7 @@ Set_Location :: (loc : *Location){
 }
 
 main :: () {
-  //random_seed(current_time_monotonic());//creates a random seed
+  random_seed(current_time_consensus().low);//creates a random seed (it's still using the same random on start)
   init_commands();   // now generated automatically from every @GameCommand-tagged proc
 
   config, config_success := read_entire_file("Data/Config.ini");
