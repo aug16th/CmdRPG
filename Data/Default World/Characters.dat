@@ -7,7 +7,7 @@ hit execution:
 interact : You're a thirsty one ain't ya? Heres another drink.
 interact execution:
   add_item_to_location(Tavern, Ale)
-acquaintances: Town Guard, Shopkeeper
+#acquaintances: Town Guard, Shopkeeper
 
 Town Guard
 name : Town Guard
@@ -17,7 +17,7 @@ hit execution:
 interact : i heard theres a bunch of goblins setting up camp right outside of town.
 interact execution:
   known_area_add(GoblinVillage)
-acquaintances: Bartender, Shopkeeper
+#acquaintances: Bartender, Shopkeeper
 
 Shopkeeper
 name : Shopkeeper
@@ -27,4 +27,4 @@ hit execution:
 interact : My shop just got robbed next door! There's absolutely nothing left.
 interact execution:
   add_location_to_area(Town, Shop)
-acquaintances: Town Guard, Bartender
+#acquaintances: Town Guard, Bartender

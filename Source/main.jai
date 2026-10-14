@@ -20,6 +20,14 @@ array_random :: (arr: [] $T) -> T {
     return arr[index];
 }
 
+random_bool :: () -> bool {
+    return (random_get() & 1) == 1;
+}
+
+random_bool_weighted :: (probability: float) -> bool {
+    return random_get_zero_to_one() < probability;
+}
+
 State :: enum {
   WORLD;
   AREA;
@@ -33,7 +41,7 @@ KnownAreas : [] *Area;
 CurrentState : State;
 CurrentArea : *Area;
 CurrentLocation : *Location;
-CurrentInteract : Interactable;
+CurrentInteract : *Interactable;
 CurrentEncounter: Encounter;
 
 Add_Area :: (a : *Area){
@@ -211,7 +219,7 @@ has_choice :: (s : string){
       for CurrentLocation.Interactables{
         if same_string(s, it.name) {
           CurrentState = .INTERACT;
-          CurrentInteract = it;
+          CurrentInteract = *it;
           return;
         }
       } 
@@ -235,7 +243,10 @@ has_choice :: (s : string){
       }
       if same_string(s, "interact") || same_string(s, CurrentInteract.Int_Alias){
         if CurrentInteract.Type == .CHARACTER {
-          print("\"%\"", generate_dialogue("Greetings",.[]));//CurrentInteract.Int_Text.text);
+          i := CurrentInteract;
+          c := cast(*Character) i;
+          print("%\n",reputation_label(c.reputation));
+          print("\"%\"", generate_dialogue("Greetings",.[reputation_label(c.reputation)]));//CurrentInteract.Int_Text.text);
         } else {
             print("%", CurrentInteract.Int_Text.text);
         }
@@ -263,11 +274,17 @@ has_choice :: (s : string){
         return;
       }   
       if same_string(s, "fight"){
-        print("You defeat the %\n", CurrentEncounter.enemy);
-        for CurrentEncounter.char.Acquaintances {
-          it.Grudge = true;
+        if random_bool_weighted(0.7) {//randomly win
+          print("You defeat the %\n", CurrentEncounter.enemy);
+          for CurrentEncounter.char.Acquaintances {
+            it.Grudge = true;
+          }
+          update_reputation(CurrentLocation, 0.3, -0.3);//hardcoded that you start the fight
+          remove_interactable(CurrentEncounter.char);
+        } else {//randomly lose
+          print("You lost to the %\n", CurrentEncounter.enemy);
+          update_reputation(CurrentLocation, -0.3, -0.3);
         }
-        remove_interactable(CurrentEncounter.char);
         CurrentState = .LOCATION;
         fresh : Encounter;
         CurrentEncounter = fresh;

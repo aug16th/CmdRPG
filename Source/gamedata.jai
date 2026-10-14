@@ -18,12 +18,18 @@ Interactable :: struct {
   Type : Interact_Type = .OBJECT;
 }
 
+Reputation :: struct {
+  likeability : float;
+  competence  : float;
+}
+
 Character :: struct {
   #as using base : Interactable;
   Int_Alias = "talk";
   Type = .CHARACTER;
   Acquaintances : [] *Character; //Charactersa that know this chracter and might come for revenge
   Grudge : bool;
+  reputation : Reputation;
 }
 
 Area :: struct {
