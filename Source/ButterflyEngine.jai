@@ -1,8 +1,17 @@
 #import "Basic";
 #import "Hash_Table";
+#import "Math";
 
 Event :: struct {
   encounter : Encounter;//Encounter struct is in gamedata.jai
+}
+
+Memory :: struct {
+  action    : string;//kill,lose,run,destroy
+  target    : string;//who or what
+  location  : string;
+  witnessed : bool;
+  delta     : Vector2;//likeability and competence
 }
 
 Event_Table : Table(*Location, Event);//Location struct is in gamedata.jai
@@ -36,9 +45,68 @@ reputation_label :: (r : Reputation) -> string {
     return "default";
 }
 
-update_reputation :: (loc : Location, c : float, l : float) {
+update_reputation :: (act : string, targ : string, loc : Location, wit : bool, c : float, l : float) {
+  delta : Vector2;
+  delta.x = l;
+  delta.y = c;
+
+  mem : Memory = .{
+    action = act,
+    target = targ,
+    location = loc.name,
+    witnessed = wit,
+    delta = delta
+  };
+  
   for loc.Characters {
     it.reputation.competence  += c;
     it.reputation.likeability += l;
+    character_remember(it, mem);//tries to remeber if big enough.
   }
 }
+
+character_remember :: (char : *Character, mem : Memory) {
+  deltascore := score_delta(mem.delta);
+  i := get_lowest_delta_index(char.memory);
+  lowscore := score_delta(char.memory[i].delta);
+  if deltascore >= lowscore {
+    char.memory[i] = mem;
+    //print("% will remember this\n", char.name);
+  }
+}
+
+score_delta :: (v : Vector2) -> float {
+  return abs(v.x) + abs(v.y);
+}
+
+get_lowest_delta_index :: (arr : [] Memory) -> int {
+  lowest := 100.0;
+  i : int = -1;
+  for arr {
+    score := score_delta(it.delta);
+    if score < lowest {
+      lowest = score;
+      i = it_index;
+    }
+  }
+  return i;
+ }
+
+ get_highest_delta_index :: (arr : [] Memory) -> int {
+  highest := 0.0;
+  i : int = -1;
+  for arr {
+    score := score_delta(it.delta);
+    if score > highest {
+      highest = score;
+      i = it_index;
+    }
+  }
+  return i;
+ }
+
+ character_recall :: (char : Character) -> bool, Memory {
+  i := get_highest_delta_index(char.memory);
+  if i > -1 return true, char.memory[i];
+  else return false, Memory.{};
+ }

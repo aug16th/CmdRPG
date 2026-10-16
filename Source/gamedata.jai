@@ -27,9 +27,10 @@ Character :: struct {
   #as using base : Interactable;
   Int_Alias = "talk";
   Type = .CHARACTER;
-  Acquaintances : [] *Character; //Charactersa that know this chracter and might come for revenge
+  Acquaintances : [] *Character; //Characters that know this chracter and might come for revenge
   Grudge : bool;
   reputation : Reputation;
+  memory : [5] Memory;
 }
 
 Area :: struct {

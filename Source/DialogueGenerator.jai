@@ -144,3 +144,23 @@ pick_by_tags :: (table: *Table(string, [..] string), tags: [] string) -> string 
 
   return "";
 }
+
+generate_recall_dialogue :: (mem : Memory) -> string {
+  targ := mem.target;
+  if mem.action == {
+    case "kill";
+    return sprint("You killed %.", targ);
+
+    case "lose";
+    return sprint("You got your ass kicked by %.", targ);
+
+    case "run";
+    return sprint("You ran away from %.", targ);
+
+    case "destroy";
+    return sprint("You destroyed that %.", targ);
+
+    case "";
+    return "wow";
+  }
+}

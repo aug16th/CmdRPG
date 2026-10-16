@@ -4,29 +4,8 @@
 #load   "gamedata.jai";//data structs and loading
 #load   "ButterflyEngine.jai";//this needs gamedata.jai
 #load   "DialogueGenerator.jai";
+#load   "random lib.jai";//randomization functions
 
-#import "Random";
-
-array_random :: (arr: [] $T) -> T {
-    if arr.count == 0 {
-        empty: T;
-        return empty;
-    }
-
-    index := cast(int) (random_get() % cast(u64) arr.count);
-    //print("count=% index=%\n", arr.count, index);
-    //for arr print("  [%] %\n", it_index, it);
-
-    return arr[index];
-}
-
-random_bool :: () -> bool {
-    return (random_get() & 1) == 1;
-}
-
-random_bool_weighted :: (probability: float) -> bool {
-    return random_get_zero_to_one() < probability;
-}
 
 State :: enum {
   WORLD;
@@ -87,7 +66,7 @@ Set_Location :: (loc : *Location){
 }
 
 main :: () {
-  random_seed(current_time_consensus().low);//creates a random seed (it's still using the same random on start)
+  init_random_seed();//creates a random seed
   init_commands();   // now generated automatically from every @GameCommand-tagged proc
 
   config, config_success := read_entire_file("Data/Config.ini");
@@ -245,8 +224,12 @@ has_choice :: (s : string){
         if CurrentInteract.Type == .CHARACTER {
           i := CurrentInteract;
           c := cast(*Character) i;
-          print("%\n",reputation_label(c.reputation));
-          print("\"%\"", generate_dialogue("Greetings",.[reputation_label(c.reputation)]));//CurrentInteract.Int_Text.text);
+          print("%\n",reputation_label(c.reputation));//print current reputation
+          print("\"");
+          print("%", generate_dialogue("Greetings",.[reputation_label(c.reputation)]));
+          found, mem := character_recall(c);
+          if found print(" %\n",generate_recall_dialogue(mem));//printing recall here. maybe build this into the generate dialogue function
+          print("\"");
         } else {
             print("%", CurrentInteract.Int_Text.text);
         }
@@ -270,7 +253,10 @@ has_choice :: (s : string){
     case .ENCOUNTER;
       if same_string(s, "run"){
         print("You run away from the %\n", CurrentEncounter.enemy);
+        update_reputation("run", CurrentEncounter.enemy, CurrentLocation, true, -0.3, -0.3);
         CurrentState = .AREA;
+        fresh : Encounter;
+        CurrentEncounter = fresh;
         return;
       }   
       if same_string(s, "fight"){
@@ -279,11 +265,11 @@ has_choice :: (s : string){
           for CurrentEncounter.char.Acquaintances {
             it.Grudge = true;
           }
-          update_reputation(CurrentLocation, 0.3, -0.3);//hardcoded that you start the fight
+          update_reputation("kill", CurrentEncounter.enemy, CurrentLocation, true, 0.3, -0.3);//hardcoded that you start the fight
           remove_interactable(CurrentEncounter.char);
         } else {//randomly lose
           print("You lost to the %\n", CurrentEncounter.enemy);
-          update_reputation(CurrentLocation, -0.3, -0.3);
+          update_reputation("lose", CurrentEncounter.enemy, CurrentLocation, true, -0.3, -0.3);
         }
         CurrentState = .LOCATION;
         fresh : Encounter;
