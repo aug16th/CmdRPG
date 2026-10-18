@@ -31,7 +31,7 @@ check_grudges :: (loc : Location) {//this gets called on Set_Location and after 
   }
 }
 
-axis_sign :: (value: float, dead_zone: float) -> float {
+axis_sign :: (value: float, dead_zone: float) -> int {
     if value >  dead_zone return  1;
     if value < -dead_zone return -1;
     return 0;
@@ -40,13 +40,14 @@ axis_sign :: (value: float, dead_zone: float) -> float {
 reputation_label :: (r : Reputation) -> string {//need the neutral edge zones
     DEAD_ZONE :: 0.25;
 
-    c :  = axis_sign(r.competence, DEAD_ZONE);
-    l :  = axis_sign(r.likeability, DEAD_ZONE);
+    c := axis_sign(r.competence, DEAD_ZONE);
+    l := axis_sign(r.likeability, DEAD_ZONE);
 
     if c ==  1 && l ==  1 return "default";//respected
-    if c ==  1 && l < 0.01 return "fear";
-    if c < 0.01 && l ==  1 return "pity";
-    if c < 0.01 && l < 0.01 return "hate";
+    if c == 0 && l == 0 return "default";
+    if c ==  1 && l <= 0 return "fear";
+    if c < 0 && l ==  1 return "pity";
+    if c <= 0 && l < 0 return "hate";
 
     return "default";
 }
