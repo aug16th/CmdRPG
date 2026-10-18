@@ -145,7 +145,7 @@ pick_by_tags :: (table: *Table(string, [..] string), tags: [] string) -> string 
   return "";
 }
 
-generate_recall_dialogue :: (mem : MemoryCounter) -> string {//Tdod: check memcounter count for repeat offender
+generate_recall_dialogue :: (mem : MemoryCounter) -> string {//Tdod: check memcounter count for repeat offender. for now does not differentiate if it happened to multiple targets or the same one.
   targ : string;
   if mem.count < 1 targ = mem.latest.target;
   else targ = "all those people";
