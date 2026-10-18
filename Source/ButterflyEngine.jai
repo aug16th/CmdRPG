@@ -16,8 +16,8 @@ Memory :: struct {
 
 MemoryCounter :: struct {//count together similar events
   count   : int;
-  latest  : Memory;
-  delta   : Vector2;
+  latest  : Memory;//maybe this can be the 5 latest?
+  delta   : Vector2;//agregate delta of all past memories
 }
 
 Event_Table : Table(*Location, Event);//Location struct is in gamedata.jai
