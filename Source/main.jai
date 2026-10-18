@@ -224,7 +224,7 @@ has_choice :: (s : string){
         if CurrentInteract.Type == .CHARACTER {
           i := CurrentInteract;
           c := cast(*Character) i;
-          print("%\n",reputation_label(c.reputation));//print current reputation
+          print("%\n", reputation_label(c.reputation));//print current reputation
           print("\"");
           print("%", generate_dialogue("Greetings",.[reputation_label(c.reputation)]));
           found, mem := character_recall(c);

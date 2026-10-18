@@ -30,7 +30,8 @@ Character :: struct {
   Acquaintances : [] *Character; //Characters that know this chracter and might come for revenge
   Grudge : bool;
   reputation : Reputation;
-  memory : [5] Memory;
+  memory : [5] MemoryCounter;
+  memcounter : Table(string, MemoryCounter);
 }
 
 Area :: struct {

@@ -6,7 +6,7 @@ Dialogue_Set :: struct {
 
 Dialogue_Table : Table(string, Dialogue_Set);
 
-generate_dialogue :: (DType: string, tags : [] string) -> string {
+generate_dialogue :: (DType: string, tags : [] string) -> string {//Todo: input witness bool
   //print("generating dialogue\n");
   generated : string;
   op : string;
@@ -145,9 +145,13 @@ pick_by_tags :: (table: *Table(string, [..] string), tags: [] string) -> string 
   return "";
 }
 
-generate_recall_dialogue :: (mem : Memory) -> string {
-  targ := mem.target;
-  if mem.action == {
+generate_recall_dialogue :: (mem : MemoryCounter) -> string {//Tdod: check memcounter count for repeat offender
+  targ : string;
+  if mem.count < 1 targ = mem.latest.target;
+  else targ = "all those people";
+  //print("action count:%\n",mem.count);
+
+  if mem.latest.action == {
     case "kill";
     return sprint("You killed %.", targ);
 
@@ -158,9 +162,10 @@ generate_recall_dialogue :: (mem : Memory) -> string {
     return sprint("You ran away from %.", targ);
 
     case "destroy";
-    return sprint("You destroyed that %.", targ);
+    if mem.count > 1 return sprint("You destroyed all those things.");
+    else return sprint("You destroyed that %.", targ);
 
-    case "";
+    case ;
     return "wow";
   }
 }

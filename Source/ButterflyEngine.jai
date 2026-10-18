@@ -14,6 +14,12 @@ Memory :: struct {
   delta     : Vector2;//likeability and competence
 }
 
+MemoryCounter :: struct {//count together similar events
+  count   : int;
+  latest  : Memory;
+  delta   : Vector2;
+}
+
 Event_Table : Table(*Location, Event);//Location struct is in gamedata.jai
 
 check_grudges :: (loc : Location) {//this gets called on Set_Location and after winning an encounter
@@ -31,16 +37,16 @@ axis_sign :: (value: float, dead_zone: float) -> int {
     return 0;
 }
 
-reputation_label :: (r : Reputation) -> string {
+reputation_label :: (r : Reputation) -> string {//need the neutral edge zones
     DEAD_ZONE :: 0.25;
 
     c := axis_sign(r.competence, DEAD_ZONE);
     l := axis_sign(r.likeability, DEAD_ZONE);
 
     if c ==  1 && l ==  1 return "default";//respected
-    if c ==  1 && l == -1 return "fear";
-    if c == -1 && l ==  1 return "pity";
-    if c == -1 && l == -1 return "hate";
+    if c ==  1 && l < 0 return "fear";
+    if c < 0 && l ==  1 return "pity";
+    if c < 0 && l < 0 return "hate";
 
     return "default";
 }
@@ -66,12 +72,16 @@ update_reputation :: (act : string, targ : string, loc : Location, wit : bool, c
 }
 
 character_remember :: (char : *Character, mem : Memory) {
-  deltascore := score_delta(mem.delta);
+  obj := find_or_add(*char.memcounter, mem.action);
+  obj.count += 1;
+  obj.latest = mem;
+  obj. delta += mem.delta;
+  deltascore := score_delta(obj.delta);
   i := get_lowest_delta_index(char.memory);
   lowscore := score_delta(char.memory[i].delta);
   if deltascore >= lowscore {
-    char.memory[i] = mem;
-    //print("% will remember this\n", char.name);
+  char.memory[i] = obj;
+  //print("% will remember this\n", char.name);
   }
 }
 
@@ -79,7 +89,7 @@ score_delta :: (v : Vector2) -> float {
   return abs(v.x) + abs(v.y);
 }
 
-get_lowest_delta_index :: (arr : [] Memory) -> int {
+get_lowest_delta_index :: (arr : [] MemoryCounter) -> int {
   lowest := 100.0;
   i : int = -1;
   for arr {
@@ -105,8 +115,25 @@ get_lowest_delta_index :: (arr : [] Memory) -> int {
   return i;
  }
 
- character_recall :: (char : Character) -> bool, Memory {
-  i := get_highest_delta_index(char.memory);
-  if i > -1 return true, char.memory[i];
-  else return false, Memory.{};
+ character_recall :: (char : Character) -> bool, MemoryCounter {
+  rep : Vector2;
+  rep.x = char.reputation.likeability;
+  rep.y = char.reputation.competence;
+  rep = normalize(rep);
+
+  HighDelta := 0.0;
+  chosen : MemoryCounter;
+  success : bool;
+
+  for char.memory {
+    dot := dot_product(rep,it.delta);
+    //print("%\n",dot);
+    if dot >= HighDelta && dot > 0.0 {
+    HighDelta = dot;
+    chosen = it;
+    success = true;
+    }
+  }
+
+  return success, chosen;
  }
