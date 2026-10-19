@@ -18,6 +18,8 @@ MemoryCounter :: struct {//count together similar events
   count   : int;
   latest  : Memory;//maybe this can be the 5 latest?
   delta   : Vector2;//agregate delta of all past memories
+  time    : int;//when last recorder to check recency againts CurrentTime
+  mentioned : bool;//if already mentioned no need to do it again
 }
 
 Event_Table : Table(*Location, Event);//Location struct is in gamedata.jai
@@ -76,7 +78,8 @@ character_remember :: (char : *Character, mem : Memory) {
   obj := find_or_add(*char.memcounter, mem.action);
   obj.count += 1;
   obj.latest = mem;
-  obj. delta += mem.delta;
+  obj.delta += mem.delta;
+  obj.time = CurrentTime;
   deltascore := score_delta(obj.delta);
   i := get_lowest_delta_index(char.memory);
   lowscore := score_delta(char.memory[i].delta);
@@ -116,17 +119,17 @@ get_lowest_delta_index :: (arr : [] MemoryCounter) -> int {
   return i;
  }
 
- character_recall :: (char : Character) -> bool, MemoryCounter {
+ character_recall :: (char : Character) -> bool, *MemoryCounter {
   rep : Vector2;
   rep.x = char.reputation.likeability;
   rep.y = char.reputation.competence;
   rep = normalize(rep);
 
   HighDelta := 0.0;
-  chosen : MemoryCounter;
+  chosen : *MemoryCounter;
   success : bool;
 
-  for char.memory {
+  for *char.memory {
     dot := dot_product(rep,it.delta);
     //print("%\n",dot);
     if dot >= HighDelta && dot > 0.0 {

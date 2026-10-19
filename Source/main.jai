@@ -22,6 +22,7 @@ CurrentArea : *Area;
 CurrentLocation : *Location;
 CurrentInteract : *Interactable;
 CurrentEncounter: Encounter;
+CurrentTime : int;
 
 Add_Area :: (a : *Area){
   temparr : [..] *Area;
@@ -63,6 +64,7 @@ Set_Location :: (loc : *Location){
   CurrentState = .LOCATION;
   CurrentLocation = loc;
   check_grudges(loc);
+  CurrentTime += 1;
 }
 
 main :: () {
@@ -108,7 +110,7 @@ main :: () {
         case .ENCOUNTER;
           print("%\n", CurrentEncounter.desc);
       }
-      print(">");
+      print("%>",CurrentTime);
 
         chars_read: u32;
         ok := ReadFile(stdin_handle, buffer.data, xx buffer.count, *chars_read, null);
@@ -174,6 +176,7 @@ has_choice :: (s : string){
         if same_string(s, it.name){
           CurrentArea = it;
           CurrentState = .AREA;
+          CurrentTime += 1;
           return;
         }
       }
@@ -181,6 +184,7 @@ has_choice :: (s : string){
     case .AREA;
       if same_string(s, "leave"){
         CurrentState = .WORLD;
+        CurrentTime += 1;
         return;
       }
       for CurrentArea.Locations{
@@ -193,6 +197,7 @@ has_choice :: (s : string){
     case .LOCATION;
       if same_string(s, "leave") {
         CurrentState = .AREA;
+        CurrentTime += 1;
         return;
       }
       for CurrentLocation.Interactables{

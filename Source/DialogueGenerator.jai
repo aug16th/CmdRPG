@@ -4,42 +4,43 @@ Dialogue_Set :: struct {
   Closer  : Table(string, [..] string);
 }
 
-Dialogue_Table : Table(string, Dialogue_Set);
+Dialogue_Table : Table(string, Table(string, Table(string, [..] string)));
 
 generate_dialogue :: (DType: string, tags : [] string) -> string {//Todo: input witness bool
   //print("generating dialogue\n");
   generated : string;
-  op : string;
-  ad : string;
-  cl : string;
+  piece : string;
+  succ0 :bool;
+  builder : String_Builder;
+  DR : [] DialoguePiece;
+  if tags.count > 0 succ0, DR = table_find(*DialogueRecipes, tags[0]);//hard code for now
+  else succ0, DR = table_find(*DialogueRecipes, "default");
 
-  succ, obj := table_find(*Dialogue_Table, DType);
-  if succ {
-    if tags.count > 0 {
-      //compare tags
-      op = pick_by_tags(*obj.Opener,  tags);
-      ad = pick_by_tags(*obj.Address, tags);
-      cl = pick_by_tags(*obj.Closer,  tags);
-    } else {
-      succ1, arr1 := table_find(*obj.Opener, "default");
-      if succ1 && arr1.count > 0 op = array_random(arr1);
+  succ, obj := table_find(*Dialogue_Table, DType);//Load Dialogue table
 
-      succ2, arr2 := table_find(*obj.Address, "default");
-      if succ2 && arr2.count > 0 ad = array_random(arr2);
+  if succ0 && succ {
+    for DR {
+      if random_bool_weighted(it.chance){
 
-      succ3, arr3 := table_find(*obj.Closer, "default");
-      if succ3 && arr3.count > 0 cl = array_random(arr3);
+        if it_index > 0  append(*builder, " ");
+        succ1, DC := table_find(*obj, it.text);
+        
+        if succ1 {
+        piece = pick_by_tags(*DC, tags);
+        append(*builder, piece);
+        }
+      }
     }
+    generated = builder_to_string(*builder);
   }
-  if ad.count > 0 {
-    generated = sprint("% %, %", op, ad, cl);
-  } else {
-    generated = sprint("% %", op, cl);
-  }
-
-  
   return generated;
 }
+
+DialoguePiece :: struct {
+  text   : string;
+  chance : float;
+}
+DialogueRecipes : Table(string, [] DialoguePiece);//
 
 Load_Dialogue_Data :: (directory : string) {
   filelist := file_list(sprint("Data/%", directory));   // returns array of string of paths
@@ -64,7 +65,7 @@ Load_Dialogue_Data :: (directory : string) {
     current_collection := trim(lines[0], " \t\r");
 
     current_category : string;
-    dialogueset : Dialogue_Set;
+    dialogueset : Table(string,Table(string, [..] string));
     current_table : *Table(string, [..] string);
 
     for lines {
@@ -73,12 +74,37 @@ Load_Dialogue_Data :: (directory : string) {
       if has_tag {
         current_category = trim(trim(it, " \t\r"), "[");
         current_category = trim(current_category, "]");
-        if current_category == "Opener"  current_table = *dialogueset.Opener;
-        if current_category == "Address" current_table = *dialogueset.Address;
-        if current_category == "Closer"  current_table = *dialogueset.Closer;
+        if current_category == "Recipes" continue;
+        else current_table = find_or_add(*dialogueset, current_category);
+        //if current_category == "Opener"  current_table = *dialogueset.Opener;
+        //if current_category == "Address" current_table = *dialogueset.Address;
+        //if current_category == "Closer"  current_table = *dialogueset.Closer;
       } else {
+        //load recipes
+        if current_category == "Recipes" {
+          tag : string;
+          arr : [..] DialoguePiece;
+          current_string := trim(it, " \t\r");
+          recipe := split(current_string, "|");
+          for * recipe {
+            it.* =  trim(it.*," \t\r");
+            if it_index == 0 tag = it.*;
+            else {
+              s := it.*;
+              space := find_index_from_right(s, " ");
+              //if space == -1 return it, 0, false;
+              piece : DialoguePiece;
+
+              piece.text   = trim(slice(s, 0, space), " \t\r");
+              num := to_integer(trim(slice(s, space + 1, s.count - space - 1), " \t\r"));
+              piece.chance = num/100.0;
+              array_add(*arr, piece);
+            }
+          }
+          table_add(*DialogueRecipes, tag, arr);
+        }
         // Add current line to category
-        if current_table {
+        else if current_table {
           current_string := trim(it, " \t\r");
           if current_string.count == 0 continue;   // skip blank lines
           open := find_index_from_left(it, "(");
@@ -145,11 +171,18 @@ pick_by_tags :: (table: *Table(string, [..] string), tags: [] string) -> string 
   return "";
 }
 
-generate_recall_dialogue :: (mem : MemoryCounter) -> string {//Tdod: check memcounter count for repeat offender. for now does not differentiate if it happened to multiple targets or the same one.
+generate_recall_dialogue :: (mem : *MemoryCounter) -> string {//Tdod: check memcounter count for repeat offender. for now does not differentiate if it happened to multiple targets or the same one.
+  
   targ : string;
   if mem.count < 2 targ = mem.latest.target;
   else targ = "all those people";
   //print("action count:%\n",mem.count);
+  if mem.mentioned return "";//return empty if already mentioned
+  if mem.time == CurrentTime {//is recent so return reaction instead of recall
+     
+  }
+
+  mem.mentioned = true; //if not returned yet set mentioned to true
 
   if mem.latest.action == {
     case "kill";

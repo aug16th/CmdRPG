@@ -1,6 +1,6 @@
 Greetings
 
-[Opener]
+[Reaction]
 Hello
 Hey
 Hi
@@ -9,23 +9,28 @@ Greetings
 Ah!(fear)
 Oh no!(fear)
 no no no!(fear)
-Ugh,(hate)
-Hmph,(hate)
-Aww(pity)
+it's y-you!(fear)
+y-you're him!(fear)
+you're h-him!(fear)
+Ugh.(hate)
+Hmph.(hate)
+Tch.(hate)
+Aww...(pity)
+Oh dear.(pity)
+Ah, welcome.(respect)
+Welcome back.(respect)
+Good to see you.(respect)
 
 [Address]
 stranger
 adventurer
-you
-good sir
-kind sir
-it's y-you!(fear)
-y-you're him!(fear)
-you're h-him!(fear)
-(hate)
+good sir(polite)
+kind sir(polite)
+you(hate)
+you piece of shit(hate)
 poor thing(pity)
 
-[Closer]
+[Stance]
 nice day today.
 hope you're doing well.
 how's it going?
@@ -38,3 +43,14 @@ go away.(hate)
 get out of here(hate)
 get out of my sight(hate)
 are you alright?(pity)
+Is there anything I can do?(pity)
+Anything you need, just say.(respect)
+It's an honor.(respect)
+Let me know if I can help.(respect)
+
+[Recipes]
+default | Reaction 100 | Address 30 | Stance 70
+fear | Reaction 100 | Stance 90 | Reference 60
+hate | Reaction 60 | Address 20 | Stance 100 | Reference 60
+pity | Reaction 100 | Address 40 | Stance 80 | Reference 50
+respect | Reaction 100 | Address 50 | Stance 70 | Reference 50
