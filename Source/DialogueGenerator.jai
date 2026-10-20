@@ -1,12 +1,6 @@
-Dialogue_Set :: struct {
-  Opener  : Table(string, [..] string);
-  Address : Table(string, [..] string);
-  Closer  : Table(string, [..] string);
-}
-
 Dialogue_Table : Table(string, Table(string, Table(string, [..] string)));
 
-generate_dialogue :: (DType: string, tags : [] string) -> string {//Todo: input witness bool
+generate_dialogue :: (char : *Character, DType: string, tags : [] string) -> string {//Todo: input witness bool
   //print("generating dialogue\n");
   generated : string;
   piece : string;
@@ -20,7 +14,18 @@ generate_dialogue :: (DType: string, tags : [] string) -> string {//Todo: input 
 
   if succ0 && succ {
     for DR {
-      if random_bool_weighted(it.chance){
+      if it.text == "Reference" {
+        found, mem := character_recall(char);
+        if found {
+          if !mem.mentioned && mem.time<CurrentTime && random_bool_weighted(it.chance) {
+            if it_index > 0  append(*builder, " ");
+            piece := generate_recall_dialogue(mem, tags);
+            append(*builder, piece);
+            mem.mentioned = true;
+          }
+        }
+      
+      }else if random_bool_weighted(it.chance){
 
         if it_index > 0  append(*builder, " ");
         succ1, DC := table_find(*obj, it.text);
@@ -40,94 +45,190 @@ DialoguePiece :: struct {
   text   : string;
   chance : float;
 }
-DialogueRecipes : Table(string, [] DialoguePiece);//
+DialogueRecipes : Table(string, [] DialoguePiece);
 
 Load_Dialogue_Data :: (directory : string) {
   filelist := file_list(sprint("Data/%", directory));   // returns array of string of paths
 
-  for filelist {
-    dialogue_data := sprint(trim(it, " \t\r"));
+  for path: filelist {
+    dialogue_data := trim(path, " \t\r");
 
     file_contents, success := read_entire_file(dialogue_data);
-
     if !success {
-      print("Error: Could not read the dialogue data file!\n");
+      print("Error: Could not read the dialogue data file: %\n", dialogue_data);
       return;
     }
 
     lines := split(file_contents, "\n");
     if lines.count == 0 continue;   // empty file, nothing to load
 
+    // strip_comment keeps every line (it only shortens them), so indexes stay
+    // valid as line numbers for error messages.
     for * lines {
       it.* = strip_comment(it.*);
     }
 
     current_collection := trim(lines[0], " \t\r");
 
-    current_category : string;
-    dialogueset : Table(string,Table(string, [..] string));
-    current_table : *Table(string, [..] string);
+    dialogueset     : Table(string, Table(string, [..] string));
+    current_table   : *Table(string, [..] string);
+    current_section : string;
+    current_event   : string;
 
-    for lines {
-      has_tag := find_index_from_left(it, "[") != -1;
+    for raw, line_index: lines {
+      line := trim(raw, " \t\r");
+      if line.count == 0 continue;
 
-      if has_tag {
-        current_category = trim(trim(it, " \t\r"), "[");
-        current_category = trim(current_category, "]");
-        if current_category == "Recipes" continue;
-        else current_table = find_or_add(*dialogueset, current_category);
-
-      } else {
-        //load recipes
-        if current_category == "Recipes" {
-          tag : string;
-          arr : [..] DialoguePiece;
-          current_string := trim(it, " \t\r");
-          recipe := split(current_string, "|");
-          for * recipe {
-            it.* =  trim(it.*," \t\r");
-            if it_index == 0 tag = it.*;
-            else {
-              s := it.*;
-              space := find_index_from_right(s, " ");
-              //if space == -1 return it, 0, false;
-              piece : DialoguePiece;
-
-              piece.text   = trim(slice(s, 0, space), " \t\r");
-              num := to_integer(trim(slice(s, space + 1, s.count - space - 1), " \t\r"));
-              piece.chance = num/100.0;
-              array_add(*arr, piece);
-            }
-          }
-          table_add(*DialogueRecipes, tag, arr);
+      // Section header: [ must be the first character on the line
+      if line[0] == #char "[" {
+        close := find_index_from_right(line, "]");
+        if close < 1 {
+          print("%:%: header is missing its closing ]\n", dialogue_data, line_index + 1);
+          current_section = "";
+          current_event   = "";
+          current_table   = null;
+          continue;
         }
-        // Add current line to category
-        else if current_table {
-          current_string := trim(it, " \t\r");
-          if current_string.count == 0 continue;   // skip blank lines
-          open := find_index_from_left(it, "(");
-          close := find_index_from_right(current_string, ")");
 
-          if open != -1 && close > open {
-            text  := trim(slice(current_string, 0, open), " \t\r");
-            inner := slice(current_string, open + 1, close - open - 1);
+        current_section = trim(slice(line, 1, close - 1), " \t");
+        current_event   = "";
+        current_table   = null;
 
-            for split(inner, ",") {
-              arr := find_or_add(current_table, trim(it, " \t\r"));
-              array_add(arr, text); 
-            }
-          } else {
-            // use default tag. find_or_add returns a pointer to the stored
-            // [..] string, creating an empty entry if the key is new.
-            arr := find_or_add(current_table, "default");
-            array_add(arr, current_string);
+        // These sections pick their table from @labels (or are recipes).
+        // Every other section is one plain tag table, as before.
+        if current_section != "Recipes" && current_section != "Reference" && current_section != "Forms" {
+          current_table = find_or_add(*dialogueset, current_section);
+        }
+        continue;
+      }
+
+      if current_section == "Recipes" {
+        load_recipe_line(line, dialogue_data, line_index + 1);
+        continue;
+      }
+
+      if current_section == "Reference" || current_section == "Forms" {
+        // @slot label
+        if line[0] == #char "@" {
+          slot := lowered(trim(slice(line, 1, line.count - 1), " \t"));
+          if slot.count == 0 {
+            print("%:%: empty @label\n", dialogue_data, line_index + 1);
+            current_table = null;
+            continue;
           }
+
+          key: string;
+          if current_section == "Forms" {
+            if current_event.count == 0 {
+              print("%:%: @% appears before any EVENT in [Forms]\n", dialogue_data, line_index + 1, slot);
+              current_table = null;
+              continue;
+            }
+            key = sprint("Forms.%.%", current_event, slot);
+          } else {
+            key = sprint("Reference.%", slot);
+          }
+
+          current_table = find_or_add(*dialogueset, key);
+          continue;
+        }
+
+        // EVENT line (Forms only): a bare all-caps word
+        if current_section == "Forms" && is_event_name(line) {
+          current_event = lowered(line);
+          current_table = null;   // a slot label must come next
+          continue;
+        }
+
+        if !current_table {
+          print("%:%: line has no @label above it: %\n", dialogue_data, line_index + 1, line);
+          continue;
         }
       }
+
+      if current_table add_dialogue_line(current_table, line);
     }
 
     table_add(*Dialogue_Table, current_collection, dialogueset);
   }
+}
+
+// Adds one dialogue line to a tag table. "text(a, b)" is stored under tags a and b.
+// A line with no tag group at the very end goes under "default".
+add_dialogue_line :: (table: *Table(string, [..] string), line: string) {
+  if line[line.count - 1] == #char ")" {
+    open := find_index_from_right(line, "(");
+    if open > 0 {
+      text  := trim(slice(line, 0, open), " \t\r");
+      inner := slice(line, open + 1, line.count - open - 2);
+
+      added := 0;
+      for split(inner, ",") {
+        tag := lowered(trim(it, " \t\r"));
+        if tag.count == 0 continue;
+
+        arr := find_or_add(table, tag);
+        array_add(arr, text);
+        added += 1;
+      }
+
+      if added > 0 return;
+    }
+  }
+
+  arr := find_or_add(table, "default");
+  array_add(arr, line);
+}
+
+// "fear | Reaction 100 | Stance 90" -> DialogueRecipes["fear"]
+load_recipe_line :: (line: string, file: string, line_number: int) {
+  parts := split(line, "|");
+  if parts.count < 2 {
+    print("%:%: recipe needs a tag and at least one piece\n", file, line_number);
+    return;
+  }
+
+  tag := lowered(trim(parts[0], " \t\r"));
+  arr : [..] DialoguePiece;
+
+  for i: 1..parts.count-1 {
+    s := trim(parts[i], " \t\r");
+    space := find_index_from_right(s, " ");
+    if space == -1 {
+      print("%:%: recipe piece '%' needs a name and a number\n", file, line_number, s);
+      continue;
+    }
+
+    piece : DialoguePiece;
+    piece.text = trim(slice(s, 0, space), " \t\r");
+    num := to_integer(trim(slice(s, space + 1, s.count - space - 1), " \t\r"));
+    piece.chance = num / 100.0;
+    array_add(*arr, piece);
+  }
+
+  table_add(*DialogueRecipes, tag, arr);
+}
+
+// An event name is one all-caps word: starts with a capital letter, then only
+// capitals, digits or underscores. "KILL" and "KILL_ALLY" qualify; "NO." and
+// "HELP ME" don't, so they stay dialogue.
+is_event_name :: (s: string) -> bool {
+  if s.count < 2 return false;
+  if s[0] < #char "A" || s[0] > #char "Z" return false;
+
+  for i: 0..s.count-1 {
+    c := s[i];
+    ok := (c >= #char "A" && c <= #char "Z") || (c >= #char "0" && c <= #char "9") || c == #char "_";
+    if !ok return false;
+  }
+  return true;
+}
+
+lowered :: (s: string) -> string {
+  if s.count == 0 return s;
+  result := copy_string(s);
+  for i: 0..result.count-1  result[i] = to_lower(result[i]);
+  return result;
 }
 
 pick_by_tags :: (table: *Table(string, [..] string), tags: [] string) -> string {
@@ -169,34 +270,50 @@ pick_by_tags :: (table: *Table(string, [..] string), tags: [] string) -> string 
   return "";
 }
 
-generate_recall_dialogue :: (mem : *MemoryCounter) -> string {//Todo: check memcounter count for repeat offender. for now does not differentiate if it happened to multiple targets or the same one.
+generate_recall_dialogue :: (mem : *MemoryCounter, tags : [] string) -> string {//Todo: check memcounter count for repeat offender. for now does not differentiate if it happened to multiple targets or the same one.
   
-  targ : string;
-  if mem.count < 2 targ = mem.latest.target;
-  else targ = "all those people";
-  //print("action count:%\n",mem.count);
-  if mem.mentioned return "";//return empty if already mentioned
-  if mem.time == CurrentTime {//is recent so return reaction instead of recall
-     
-  }
+  targ := mem.latest.target;
+  act := mem.latest.action;
+  wit : string;
+  if mem.latest.witnessed wit = "saw";
+  else wit = "heard";
 
-  mem.mentioned = true; //if not returned yet set mentioned to true
+  objsuc, obj := table_find(*Dialogue_Table,"Greetings");//hardcoded greetings for now
+  refsuc : bool;
+  ref : Table(string, [..] string);
+  if objsuc refsuc, ref = table_find(*obj, sprint("Reference.%",wit));
 
-  if mem.latest.action == {
-    case "kill";
-    return sprint("You killed %.", targ);
+  recall := pick_by_tags(*ref, tags);
+  recall = fill_placeholder(recall, *obj, act, tags);//fill in the placeholder
+  recall = fill_placeholder(recall, mem.latest.target.name);//fill in target if any
+  //maybe later we make a function that checks character relation so we can build what they call another character
+  return recall;
+  
+}
 
-    case "lose";
-    return sprint("You got your ass kicked by %.", targ);
+fill_placeholder :: (in : string, table : *Table(string, Table(string, [..] string)), action : string, tags : [] string) -> string {
+  index := find_index_from_left(in,"{");
+  if index == -1 return in;
 
-    case "run";
-    return sprint("You ran away from %.", targ);
+  close := find_index_from_right(in,"}");
+  front := slice(in, 0, index);
+  slot  := slice(in, index+1, close- index -1);
+  end   := slice(in, close+1, in.count - close);
 
-    case "destroy";
-    if mem.count > 1 return sprint("You destroyed all those things.");
-    else return sprint("You destroyed that %.", targ);
+  succ, obj := table_find(table, sprint("Forms.%.%", action, slot));
+  if succ {
+    fill := pick_by_tags(*obj, tags);
+    return sprint("%%%",front, fill, end);//might want to use a default spacer defined in "join"
+  }else return "failed to fill placeholder";
+}
 
-    case ;
-    return "wow";
-  }
+fill_placeholder :: (in : string, target : string) -> string {
+  index := find_index_from_left(in,"{");
+  if index == -1 return in;
+
+  close := find_index_from_right(in,"}");
+  front := slice(in, 0, index);
+  end   := slice(in, close+1, in.count - close);
+
+  return sprint ("%%%",front, target, end);
 }

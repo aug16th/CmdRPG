@@ -2,13 +2,13 @@
 #import "Hash_Table";
 #import "Math";
 
-Event :: struct {
-  encounter : Encounter;//Encounter struct is in gamedata.jai
-}
+// Event :: struct {
+//   encounter : Encounter;//Encounter struct is in gamedata.jai
+// }
 
 Memory :: struct {
   action    : string;//kill,lose,run,destroy
-  target    : string;//who or what
+  target    : CharacterInfo;//who or what
   location  : string;
   witnessed : bool;
   delta     : Vector2;//likeability and competence
@@ -22,12 +22,12 @@ MemoryCounter :: struct {//count together similar events
   mentioned : bool;//if already mentioned no need to do it again
 }
 
-Event_Table : Table(*Location, Event);//Location struct is in gamedata.jai
+//Event_Table : Table(*Location, Event);//Location struct is in gamedata.jai
 
 check_grudges :: (loc : Location) {//this gets called on Set_Location and after winning an encounter
   for loc.Characters {
     if it.Grudge {
-      Start_Encounter(.{it,"Enemy",sprint("% attacks you. They want revenge because you killed their friend.", it.name) });
+      Start_Encounter(.{it,sprint("% attacks you. They want revenge because you killed their friend.", it.name) });
       return;
     }
   }
@@ -54,14 +54,14 @@ reputation_label :: (r : Reputation) -> string {//need the neutral edge zones
     return "default";
 }
 
-update_reputation :: (act : string, targ : string, loc : Location, wit : bool, c : float, l : float) {
+update_reputation :: (act : string, targ : Character, loc : Location, wit : bool, c : float, l : float) {
   delta : Vector2;
   delta.x = l;
   delta.y = c;
 
   mem : Memory = .{
     action = act,
-    target = targ,
+    target = get_character_info(targ),//we eventually might want this is Character
     location = loc.name,
     witnessed = wit,
     delta = delta

@@ -1,6 +1,7 @@
 [Characters]
 Bartender
-name : Bartender
+name : Bob
+role : Bartender
 hit : You hit the bartender which starts a fight.
 hit execution:
   start_encounter(Bartender, bartender, You are now in an encounter against the bartender)
@@ -10,7 +11,8 @@ interact execution:
 #acquaintances: Town Guard, Shopkeeper
 
 Town Guard
-name : Town Guard
+name : Jim
+role : Town Guard
 hit : You hit the guard which starts a fight.
 hit execution:
   start_encounter(Town Guard, guard, You are now in an encounter against a guard)
@@ -20,7 +22,8 @@ interact execution:
 #acquaintances: Bartender, Shopkeeper
 
 Shopkeeper
-name : Shopkeeper
+name : Randy
+role : Shopkeeper
 hit : You hit the shopkeeper which starts a fight.
 hit execution:
   start_encounter(Shopkeeper, shopkeeper, You are now in an encounter against the shopkeeper)

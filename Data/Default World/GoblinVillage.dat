@@ -21,6 +21,7 @@ characters: PeepoGoblin
 [Characters]
 BozoGoblin
 name: Bozo
+role: Goblin
 hit : You hit the goblin.
 hit execution:
   start_encounter(BozoGoblin,goblin, You are now in an encounter against a goblin)
@@ -29,6 +30,7 @@ acquaintances: PeepoGoblin
 
 PeepoGoblin
 name: Peepo
+role: Goblin
 hit : You hit the goblin.
 hit execution:
   start_encounter(PeepoGoblin,goblin, You are now in an encounter against a goblin)

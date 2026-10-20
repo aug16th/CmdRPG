@@ -91,7 +91,7 @@ start_encounter :: (args : [] string){
     found, char := table_find(*Characters_Table, args[0]);
 
     if found {
-      var : Encounter = .{char = char, enemy = e, desc = d};
+      var : Encounter = .{char = char, desc = d};
       Start_Encounter(var);
     } else print("Error: Character not found\n");
   }

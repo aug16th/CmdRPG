@@ -25,6 +25,7 @@ Reputation :: struct {
 
 Character :: struct {
   #as using base : Interactable;
+  Role : string;
   Int_Alias = "talk";
   Type = .CHARACTER;
   Acquaintances : [] *Character; //Characters that know this chracter and might come for revenge
@@ -32,6 +33,15 @@ Character :: struct {
   reputation : Reputation;
   memory : [5] MemoryCounter;
   memcounter : Table(string, MemoryCounter);
+}
+
+CharacterInfo :: struct {
+  name : string;
+  Role : string;
+}
+
+get_character_info :: (char : Character) -> CharacterInfo {
+  return.{name = char.name, Role = char.Role};
 }
 
 Area :: struct {
@@ -51,7 +61,6 @@ Location :: struct {
 
 Encounter :: struct {
   char  : Character;
-  enemy : string;
   desc  : string;
 }
 
@@ -203,6 +212,8 @@ load_characters :: (sec : Section){
 
         if key == "name" {
             current.name = value;
+        } else if key == "role" {
+            current.Role = value;
         } else if key == "hit" {
             current.Hit_Text.text = value;
         } else if key == "hit execution" {

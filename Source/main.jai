@@ -157,7 +157,7 @@ look_choice :: (){
       print("%\n", it.name);
     }
     for CurrentLocation.Characters{
-      print("%\n", it.name);
+      print("% the %\n", it.name, it.Role);
     }
   }
 }
@@ -231,9 +231,7 @@ has_choice :: (s : string){
           c := cast(*Character) i;
           print("%\n", reputation_label(c.reputation));//print current reputation
           print("\"");
-          print("%", generate_dialogue("Greetings",.[reputation_label(c.reputation)]));
-          found, mem := character_recall(c);
-          if found print(" %\n",generate_recall_dialogue(mem));//printing recall here. maybe build this into the generate dialogue function
+          print("%", generate_dialogue(c, "Greetings",.[reputation_label(c.reputation)]));
           print("\"");
         } else {
             print("%", CurrentInteract.Int_Text.text);
@@ -257,8 +255,8 @@ has_choice :: (s : string){
   //Interact------------------------------------------------------------//   
     case .ENCOUNTER;
       if same_string(s, "run"){
-        print("You run away from the %\n", CurrentEncounter.enemy);
-        update_reputation("run", CurrentEncounter.enemy, CurrentLocation, true, -0.3, -0.3);
+        print("You run away from the % the %\n", CurrentEncounter.char.name, CurrentEncounter.char.Role);
+        update_reputation("run", CurrentEncounter.char, CurrentLocation, true, -0.3, -0.3);
         CurrentState = .AREA;
         fresh : Encounter;
         CurrentEncounter = fresh;
@@ -266,15 +264,15 @@ has_choice :: (s : string){
       }   
       if same_string(s, "fight"){
         if random_bool_weighted(0.7) {//randomly win
-          print("You defeat the %\n", CurrentEncounter.enemy);
+          print("You defeat % the %\n", CurrentEncounter.char.name, CurrentEncounter.char.Role);
           for CurrentEncounter.char.Acquaintances {
             it.Grudge = true;
           }
-          update_reputation("kill", CurrentEncounter.enemy, CurrentLocation, true, 0.3, -0.3);//hardcoded that you start the fight
+          update_reputation("kill", CurrentEncounter.char, CurrentLocation, true, 0.3, -0.3);//hardcoded that you start the fight
           remove_interactable(CurrentEncounter.char);
         } else {//randomly lose
-          print("You lost to the %\n", CurrentEncounter.enemy);
-          update_reputation("lose", CurrentEncounter.enemy, CurrentLocation, true, -0.3, -0.3);
+          print("You lost to % the %\n", CurrentEncounter.char.name, CurrentEncounter.char.Role);
+          update_reputation("lose", CurrentEncounter.char, CurrentLocation, true, -0.3, -0.3);
         }
         CurrentState = .LOCATION;
         fresh : Encounter;
