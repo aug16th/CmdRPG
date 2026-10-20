@@ -48,6 +48,111 @@ Anything you need, just say.(respect)
 It's an honor.(respect)
 Let me know if I can help.(respect)
 
+# Reaction dialogue.
+#
+# [Section]    starts a section (Reference or Forms)
+# EVENT        all caps, one word: starts an event (Forms only)
+# @slot        lowercase: groups the lines under it
+# text(tags)   a line, with optional emotion tags at the very end
+#
+# {clause} {noun} {short} {habitual} are filled in from the Forms section.
+# {target} is filled in when the event happens.
+# Don't use # or [ inside dialogue lines.
+
+[Reference]
+@saw
+I was there when {clause}.(fear)
+I saw {short}.(fear, pity)
+I haven't forgotten {noun}.(hate)
+I saw {short}, and I haven't forgotten.(hate)
+I'm sorry about {noun}.(pity)
+{noun} was impressive.(respect)
+I saw {short}. Impressive.(respect)
+
+@heard
+I heard {clause}.(fear, hate, respect)
+Everyone's talking about {noun}.(fear)
+Word is {clause}.(hate)
+I heard about {short}.(pity)
+I heard {clause}. I'm sorry.(pity)
+Word of {noun} has spread.(respect)
+
+
+[Forms]
+KILL
+@clause
+you killed {target}
+you beat {target}
+you took down {target}(respect)
+you cut down {target}(fear)
+you murdered {target}(hate)
+
+@noun
+the death of {target}
+that fight with {target}
+your victory over {target}(respect)
+the killing of {target}(hate)
+
+@short
+what happened to {target}
+what you did to {target}
+
+@habitual
+you keep killing people around here
+you keep picking fights
+you keep winning fights(respect)
+
+LOSE
+@clause
+you lost to {target}
+{target} beat you
+{target} knocked you flat(pity)
+
+@noun
+your fight with {target}
+your defeat by {target}
+that beating from {target}(pity)
+
+@short
+what happened with {target}
+
+@habitual
+you keep losing fights
+you keep getting beaten(pity)
+
+RUN
+@clause
+you ran from {target}
+you fled from {target}
+you backed down from {target}(hate)
+
+@noun
+how you ran from {target}
+your retreat from {target}
+
+@short
+what happened with {target}
+
+@habitual
+you keep running from fights
+
+DESTROY
+@clause
+you smashed {target}
+you broke {target}
+you wrecked {target}(hate)
+
+@noun
+the damage to {target}
+the wreckage of {target}(hate)
+
+@short
+what you did to {target}
+
+@habitual
+you keep smashing things
+you keep wrecking things(hate)
+
 [Recipes]
 default | Reaction 100 | Address 30 | Stance 70
 fear | Reaction 100 | Stance 90 | Reference 60

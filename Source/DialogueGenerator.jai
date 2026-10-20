@@ -76,9 +76,7 @@ Load_Dialogue_Data :: (directory : string) {
         current_category = trim(current_category, "]");
         if current_category == "Recipes" continue;
         else current_table = find_or_add(*dialogueset, current_category);
-        //if current_category == "Opener"  current_table = *dialogueset.Opener;
-        //if current_category == "Address" current_table = *dialogueset.Address;
-        //if current_category == "Closer"  current_table = *dialogueset.Closer;
+
       } else {
         //load recipes
         if current_category == "Recipes" {
@@ -171,7 +169,7 @@ pick_by_tags :: (table: *Table(string, [..] string), tags: [] string) -> string 
   return "";
 }
 
-generate_recall_dialogue :: (mem : *MemoryCounter) -> string {//Tdod: check memcounter count for repeat offender. for now does not differentiate if it happened to multiple targets or the same one.
+generate_recall_dialogue :: (mem : *MemoryCounter) -> string {//Todo: check memcounter count for repeat offender. for now does not differentiate if it happened to multiple targets or the same one.
   
   targ : string;
   if mem.count < 2 targ = mem.latest.target;
