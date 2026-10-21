@@ -44,6 +44,10 @@ get_character_info :: (char : Character) -> CharacterInfo {
   return.{name = char.name, Role = char.Role};
 }
 
+character_fulladdress :: (char : Character) -> string {
+  return sprint("% the %", char.name, char.Role);//Todo: eventually define this in dialogue join
+}
+
 Area :: struct {
   name : string;
   desc : string;

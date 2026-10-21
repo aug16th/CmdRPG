@@ -255,7 +255,7 @@ has_choice :: (s : string){
   //Interact------------------------------------------------------------//   
     case .ENCOUNTER;
       if same_string(s, "run"){
-        print("You run away from the % the %\n", CurrentEncounter.char.name, CurrentEncounter.char.Role);
+        print("You run away from the %\n", character_fulladdress(CurrentEncounter.char));
         update_reputation("run", CurrentEncounter.char, CurrentLocation, true, -0.3, -0.3);
         CurrentState = .AREA;
         fresh : Encounter;
@@ -264,14 +264,14 @@ has_choice :: (s : string){
       }   
       if same_string(s, "fight"){
         if random_bool_weighted(0.7) {//randomly win
-          print("You defeat % the %\n", CurrentEncounter.char.name, CurrentEncounter.char.Role);
+          print("You defeat %\n", character_fulladdress(CurrentEncounter.char));
           for CurrentEncounter.char.Acquaintances {
             it.Grudge = true;
           }
           update_reputation("kill", CurrentEncounter.char, CurrentLocation, true, 0.3, -0.3);//hardcoded that you start the fight
           remove_interactable(CurrentEncounter.char);
         } else {//randomly lose
-          print("You lost to % the %\n", CurrentEncounter.char.name, CurrentEncounter.char.Role);
+          print("You lost to %\n", character_fulladdress(CurrentEncounter.char));
           update_reputation("lose", CurrentEncounter.char, CurrentLocation, true, -0.3, -0.3);
         }
         CurrentState = .LOCATION;
