@@ -8,7 +8,7 @@
 
 Memory :: struct {
   action    : string;//kill,lose,run,destroy
-  target    : CharacterInfo;//who or what
+  target    : *Character;//who or what
   location  : string;
   witnessed : bool;
   delta     : Vector2;//likeability and competence
@@ -54,24 +54,47 @@ reputation_label :: (r : Reputation) -> string {//need the neutral edge zones
     return "default";
 }
 
-update_reputation :: (act : string, targ : Character, loc : Location, wit : bool, c : float, l : float) {
+update_reputation :: (act : string, targ : *Character, loc : Location, wit : bool, c : float, l : float) {
   delta : Vector2;
   delta.x = l;
   delta.y = c;
 
   mem : Memory = .{
     action = act,
-    target = get_character_info(targ),//we eventually might want this is Character
+    target = targ,//we eventually might want this is Character
     location = loc.name,
     witnessed = wit,
     delta = delta
   };
   
   for loc.Characters {
-    it.reputation.competence  += c;
-    it.reputation.likeability += l;
-    character_remember(it, mem);//tries to remeber if big enough.
+    calculate_reputation_update(it, mem);
   }
+}
+
+calculate_reputation_update :: (char : *Character, mem : Memory) {
+  friend : int;
+  if array_find(char.Acquaintances, mem.target) friend = 1;
+  frien_boost := 1 + char.friendship * (1- char.virtue_vs_might) *friend;
+
+  l := mem.delta.x * char.morality * frien_boost;
+  c := mem.delta.y;
+
+  if char.virtue_vs_might < 0 l = lerp(l, c, -char.virtue_vs_might);
+  if char.virtue_vs_might > 0 c = lerp(c, l, char.virtue_vs_might);
+
+  l *= char.reactivity.x;
+  c *= char.reactivity.y;
+
+  memo := mem;
+
+  memo.delta.x = l;
+  memo.delta.y = c;
+
+  char.reputation.likeability = clamp(char.reputation.likeability + l, -1, 1);
+  char.reputation.competence = clamp(char.reputation.competence + c, -1, 1);
+
+  character_remember(char, memo);//tries to remember if big enough
 }
 
 character_remember :: (char : *Character, mem : Memory) {

@@ -30,18 +30,15 @@ Character :: struct {
   Type = .CHARACTER;
   Acquaintances : [] *Character; //Characters that know this chracter and might come for revenge
   Grudge : bool;
+  //reputation calculations---------------------
+  morality : float = 1;//How much good actions scale likeability. -1 likes evil and 0 doesn't care
+  virtue_vs_might : float;//How much they prioritize competence vs Likeability.-1 only cares about strength and 1 only cares about kindness
+  reactivity : Vector2 = .{1,1};
+  friendship : float = 1.0;// how much reputation is affected when victim is am acquaintance. 0 means they don't care so cold mfs.
+
   reputation : Reputation;
   memory : [5] MemoryCounter;
   memcounter : Table(string, MemoryCounter);
-}
-
-CharacterInfo :: struct {
-  name : string;
-  Role : string;
-}
-
-get_character_info :: (char : Character) -> CharacterInfo {
-  return.{name = char.name, Role = char.Role};
 }
 
 character_fulladdress :: (char : Character) -> string {
@@ -64,7 +61,7 @@ Location :: struct {
 }
 
 Encounter :: struct {
-  char  : Character;
+  char  : *Character;
   desc  : string;
 }
 
@@ -234,7 +231,11 @@ load_characters :: (sec : Section){
             data.char = current;
             data.Acquaintances = arr;
             array_add(*loaded_acquaintance, data);
-            
+        } else if key == "morality" {
+            f := string_to_float(value);
+            f = clamp(f, -1, 1);
+            current.morality = f;
+            print("morality is %\n",f);
         }
     }
     //this needs to run one more time when section complete to assign the functions

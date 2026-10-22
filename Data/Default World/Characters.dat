@@ -31,3 +31,11 @@ interact : My shop just got robbed next door! There's absolutely nothing left.
 interact execution:
   add_location_to_area(Town, Shop)
 #acquaintances: Town Guard, Bartender
+
+Satan
+name : Satan
+role : Demon
+hit : You hit the shopkeeper which starts a fight.
+hit execution:
+  start_encounter(Satan, demon, You are now in an encounter against the demon)
+morality : -1
