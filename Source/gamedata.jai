@@ -235,7 +235,20 @@ load_characters :: (sec : Section){
             f := string_to_float(value);
             f = clamp(f, -1, 1);
             current.morality = f;
-            print("morality is %\n",f);
+        } else if key == "virtue_vs_might" {
+            f := string_to_float(value);
+            f = clamp(f, -1, 1);
+            current.virtue_vs_might = f;
+
+        } else if key == "reactivity" {
+            v :=  string_to_vector2(value);
+            current.reactivity = v;
+
+        } else if key == "friendship" {
+            f := string_to_float(value);
+            f = clamp(f, -1, 1);
+            current.friendship = f;
+
         }
     }
     //this needs to run one more time when section complete to assign the functions
@@ -477,4 +490,15 @@ parse_call :: (s: string) -> func_call {
     result.args = args;   // [..] string implicitly coerces to [] string
 
     return result;
+}
+
+string_to_vector2 :: (s : string)-> Vector2 {
+  v : Vector2;
+  arr := split(s,",");
+  if arr.count < 2 return v;
+
+  v.x = string_to_float(trim(arr[0], " \t\r"));
+  v.y = string_to_float(trim(arr[1], " \t\r"));
+
+  return v;
 }

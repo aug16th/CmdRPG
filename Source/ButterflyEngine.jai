@@ -73,15 +73,29 @@ update_reputation :: (act : string, targ : *Character, loc : Location, wit : boo
 }
 
 calculate_reputation_update :: (char : *Character, mem : Memory) {
+  //add a check if we harmed or helped the person
+
+  //default harmed/ did something bad
+  //check if friends
   friend : int;
   if array_find(char.Acquaintances, mem.target) friend = 1;
-  frien_boost := 1 + char.friendship * (1- char.virtue_vs_might) *friend;
 
-  l := mem.delta.x * char.morality * frien_boost;
+  l := mem.delta.x;
   c := mem.delta.y;
 
-  if char.virtue_vs_might < 0 l = lerp(l, c, -char.virtue_vs_might);
-  if char.virtue_vs_might > 0 c = lerp(c, l, char.virtue_vs_might);
+  if friend == 1 && char.friendship > 0 {
+    //ignore morality and scale based on friendship
+    //after lerping vvm l might = c
+    if l >= 0 l = l*-char.friendship;//if l is positive scale with negative friendship
+    else l -= abs(l)*char.friendship;
+
+  } else {
+    //if 0 friendship or not a friend, apply morality
+    l *= char.morality;
+
+    if char.virtue_vs_might < 0 l = lerp(l, c, -char.virtue_vs_might);
+    if char.virtue_vs_might > 0 c = lerp(c, l, char.virtue_vs_might);
+  }
 
   l *= char.reactivity.x;
   c *= char.reactivity.y;
