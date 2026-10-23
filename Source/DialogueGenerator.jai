@@ -1,7 +1,9 @@
 Dialogue_Table : Table(string, Table(string, Table(string, [..] string)));
 
-generate_dialogue :: (char : *Character, DType: string, tags : [] string) -> string {//Todo: input witness bool
+generate_dialogue :: (char : *Character, DType: string) -> string {//Todo: input witness bool
   //print("generating dialogue\n");
+  temprep := calculate_temp_reputation(char);//temporary reputation combined with current scene
+  tags : [] string = .[reputation_label(temprep)];//create our tags
   generated : string;
   piece : string;
   succ0 :bool;
@@ -15,6 +17,21 @@ generate_dialogue :: (char : *Character, DType: string, tags : [] string) -> str
   if succ0 && succ {
     for DR {
       if it.text == "Reference" {
+        //Current scene memory
+        if CurrentSceneMem.count > 0 {
+        //we need to generate a recall based on the current scene memories
+        found, mem := recall_currentscene(char, temprep);
+        if found {
+          if !mem.mentioned && random_bool_weighted(it.chance) {
+            if it_index > 0  append(*builder, " ");
+            piece := generate_recall_dialogue(*mem, tags);
+            append(*builder, piece);
+            mem.mentioned = true;
+          }
+        }
+
+        } else {
+        //internal memory
         found, mem := character_recall(char);
         if found {
           if !mem.mentioned && mem.time<CurrentTime && random_bool_weighted(it.chance) {
@@ -24,6 +41,7 @@ generate_dialogue :: (char : *Character, DType: string, tags : [] string) -> str
             mem.mentioned = true;
           }
         }
+      }
       
       }else if random_bool_weighted(it.chance){
 
@@ -315,8 +333,6 @@ fill_placeholder :: (in : string, target : string, self : bool) -> string {
   close := find_index_from_right(in,"}");
   front := slice(in, 0, index);
   end   := slice(in, close+1, in.count - close);
-
-  print("front count:%\n end count:%\n",front.count, end.count);
 
   if self {
     if front.count > end.count return sprint("%%%",front, "me", end);

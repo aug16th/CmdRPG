@@ -23,6 +23,7 @@ CurrentLocation : *Location;
 CurrentInteract : *Interactable;
 CurrentEncounter: Encounter;
 CurrentTime : int;
+CurrentSceneMem : [..] Memory;
 
 Add_Area :: (a : *Area){
   temparr : [..] *Area;
@@ -202,6 +203,7 @@ has_choice :: (s : string){
  //Location-------------------------------------------------------------//   
     case .LOCATION;
       if same_string(s, "leave") {
+        update_reputation();
         CurrentState = .AREA;
         CurrentTime += 1;
         return;
@@ -235,9 +237,9 @@ has_choice :: (s : string){
         if CurrentInteract.Type == .CHARACTER {
           i := CurrentInteract;
           c := cast(*Character) i;
-          print("%\n", reputation_label(c.reputation));//print current reputation
+          print("%\n", reputation_label(calculate_temp_reputation(c)));//print current reputation
           print("\"");
-          print("%", generate_dialogue(c, "Greetings",.[reputation_label(c.reputation)]));
+          print("%", generate_dialogue(c, "Greetings"));
           print("\"");
         } else {
             print("%", CurrentInteract.Int_Text.text);
@@ -262,7 +264,9 @@ has_choice :: (s : string){
     case .ENCOUNTER;
       if same_string(s, "run"){
         print("You run away from the %\n", character_fulladdress(CurrentEncounter.char));
-        update_reputation("run", CurrentEncounter.char, CurrentLocation, true, -0.3, -0.3);
+        //update_reputation("run", CurrentEncounter.char, CurrentLocation, true, -0.3, -0.3);
+        add_to_scene("run", CurrentEncounter.char, CurrentLocation, true, -0.3, -0.3);
+        update_reputation();
         CurrentState = .AREA;
         fresh : Encounter;
         CurrentEncounter = fresh;
@@ -274,11 +278,13 @@ has_choice :: (s : string){
           for CurrentEncounter.char.Acquaintances {
             it.Grudge = true;
           }
-          update_reputation("kill", CurrentEncounter.char, CurrentLocation, true, 0.3, -0.3);//hardcoded that you start the fight
+          //update_reputation("kill", CurrentEncounter.char, CurrentLocation, true, 0.3, -0.3);//hardcoded that you start the fight
+          add_to_scene("run", CurrentEncounter.char, CurrentLocation, true, 0.3, -0.3);
           remove_interactable(CurrentEncounter.char);
         } else {//randomly lose
           print("You lost to %\n", character_fulladdress(CurrentEncounter.char));
-          update_reputation("lose", CurrentEncounter.char, CurrentLocation, true, -0.3, -0.3);
+          //update_reputation("lose", CurrentEncounter.char, CurrentLocation, true, -0.3, -0.3);
+          add_to_scene("run", CurrentEncounter.char, CurrentLocation, true, -0.3, -0.3);
         }
         CurrentState = .LOCATION;
         fresh : Encounter;

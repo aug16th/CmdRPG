@@ -39,11 +39,11 @@ axis_sign :: (value: float, dead_zone: float) -> int {
     return 0;
 }
 
-reputation_label :: (r : Reputation) -> string {//need the neutral edge zones
+reputation_label :: (r : Vector2) -> string {//need the neutral edge zones
     DEAD_ZONE :: 0.25;
 
-    c := axis_sign(r.competence, DEAD_ZONE);
-    l := axis_sign(r.likeability, DEAD_ZONE);
+    c := axis_sign(r.x, DEAD_ZONE);
+    l := axis_sign(r.x, DEAD_ZONE);
 
     if c ==  1 && l ==  1 return "respect";//respected
     if c == 0 && l == 0 return "default";
@@ -54,25 +54,34 @@ reputation_label :: (r : Reputation) -> string {//need the neutral edge zones
     return "default";
 }
 
-update_reputation :: (act : string, targ : *Character, loc : Location, wit : bool, c : float, l : float) {
+update_reputation :: () {
+  for CurrentLocation.Characters {
+    char := it;
+    for CurrentSceneMem {
+      Character_reputation_add(char, it);
+    }
+  }
+  fresh : [..] Memory;
+  CurrentSceneMem = fresh;
+}
+
+add_to_scene :: (act : string, targ : *Character, loc : Location, wit : bool, c : float, l : float) {//records memory to current scene
   delta : Vector2;
   delta.x = l;
   delta.y = c;
 
   mem : Memory = .{
     action = act,
-    target = targ,//we eventually might want this is Character
+    target = targ,
     location = loc.name,
     witnessed = wit,
     delta = delta
   };
-  
-  for loc.Characters {
-    calculate_reputation_update(it, mem);
-  }
+
+  array_add(*CurrentSceneMem, mem);
 }
 
-calculate_reputation_update :: (char : *Character, mem : Memory) {
+calculate_reputation_change :: (char : Character, mem : Memory)-> Vector2 {
   //add a check if we harmed or helped the person
 
   //default harmed/ did something bad
@@ -100,13 +109,17 @@ calculate_reputation_update :: (char : *Character, mem : Memory) {
   l *= char.reactivity.x;
   c *= char.reactivity.y;
 
+  return .{l,c};
+}
+
+Character_reputation_add :: (char : *Character, mem : Memory) {
   memo := mem;
+  
+  //calculate relative contextual perception
+  memo.delta = calculate_reputation_change(char,mem);
 
-  memo.delta.x = l;
-  memo.delta.y = c;
-
-  char.reputation.likeability = clamp(char.reputation.likeability + l, -1, 1);
-  char.reputation.competence = clamp(char.reputation.competence + c, -1, 1);
+  char.reputation.likeability = clamp(char.reputation.likeability + memo.delta.x, -1, 1);
+  char.reputation.competence = clamp(char.reputation.competence + memo.delta.y, -1, 1);
 
   character_remember(char, memo);//tries to remember if big enough
 }
@@ -167,6 +180,47 @@ get_lowest_delta_index :: (arr : [] MemoryCounter) -> int {
   success : bool;
 
   for *char.memory {
+    dot := dot_product(rep,it.delta);
+    //print("%\n",dot);
+    if dot >= HighDelta && dot > 0.0 {
+    HighDelta = dot;
+    chosen = it;
+    success = true;
+    }
+  }
+
+  return success, chosen;
+ }
+
+ calculate_temp_reputation :: (char : Character) -> Vector2 {
+  v : Vector2;
+  for CurrentSceneMem {
+    v += calculate_reputation_change(char, it);
+  }
+
+  v += .{char.reputation.likeability, char.reputation.competence};
+
+  return v;
+ }
+
+ recall_currentscene :: (char : Character, tempdelta : Vector2) -> bool, MemoryCounter {
+  temp : Table(string, MemoryCounter);
+  
+
+  for CurrentSceneMem {
+    obj := find_or_add(*temp, it.action);
+    obj.count += 1;
+    obj.latest = it;
+    obj.delta += calculate_reputation_change(char, it);
+    obj.time = CurrentTime;
+  }
+
+  HighDelta := 0.0;
+  chosen : MemoryCounter;
+  success : bool;
+  rep := normalize(tempdelta);
+
+  for temp {
     dot := dot_product(rep,it.delta);
     //print("%\n",dot);
     if dot >= HighDelta && dot > 0.0 {
