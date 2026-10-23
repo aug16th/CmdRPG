@@ -18,18 +18,15 @@ generate_dialogue :: (char : *Character, DType: string) -> string {//Todo: input
     for DR {
       if it.text == "Reference" {
         //Current scene memory
-        if CurrentSceneMem.count > 0 {
-        //we need to generate a recall based on the current scene memories
         found, mem := recall_currentscene(char, temprep);
-        if found {
+        if CurrentSceneMem.count > 0 && found{
+        //we need to generate a recall based on the current scene memories
           if !mem.mentioned && random_bool_weighted(it.chance) {
             if it_index > 0  append(*builder, " ");
             piece := generate_recall_dialogue(*mem, tags);
             append(*builder, piece);
             mem.mentioned = true;
           }
-        }
-
         } else {
         //internal memory
         found, mem := character_recall(char);
