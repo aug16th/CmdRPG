@@ -272,7 +272,8 @@ pick_by_tags :: (table: *Table(string, [..] string), tags: [] string) -> string 
 
 generate_recall_dialogue :: (mem : *MemoryCounter, tags : [] string) -> string {//Todo: check memcounter count for repeat offender. for now does not differentiate if it happened to multiple targets or the same one.
   
-  targ := mem.latest.target;
+  targ := mem.latest.target.name;
+  self := CurrentInteract.name == targ;
   act := mem.latest.action;
   wit : string;
   if mem.latest.witnessed wit = "saw";
@@ -284,14 +285,14 @@ generate_recall_dialogue :: (mem : *MemoryCounter, tags : [] string) -> string {
   if objsuc refsuc, ref = table_find(*obj, sprint("Reference.%",wit));
 
   recall := pick_by_tags(*ref, tags);
-  recall = fill_placeholder(recall, *obj, act, tags);//fill in the placeholder
-  recall = fill_placeholder(recall, mem.latest.target.name);//fill in target if any
+  recall = fill_placeholder(recall, *obj, act, tags, targ, self);//fill in the placeholder
+  //recall = fill_placeholder(recall, targ, self);//fill in target if any
   //maybe later we make a function that checks character relation so we can build what they call another character
   return recall;
   
 }
 
-fill_placeholder :: (in : string, table : *Table(string, Table(string, [..] string)), action : string, tags : [] string) -> string {
+fill_placeholder :: (in : string, table : *Table(string, Table(string, [..] string)), action : string, tags : [] string,targ : string, self :bool) -> string {
   index := find_index_from_left(in,"{");
   if index == -1 return in;
 
@@ -302,12 +303,12 @@ fill_placeholder :: (in : string, table : *Table(string, Table(string, [..] stri
 
   succ, obj := table_find(table, sprint("Forms.%.%", action, slot));
   if succ {
-    fill := pick_by_tags(*obj, tags);
+    fill := fill_placeholder(pick_by_tags(*obj, tags),targ,self);
     return sprint("%%%",front, fill, end);//might want to use a default spacer defined in "join"
   }else return "failed to fill placeholder";
 }
 
-fill_placeholder :: (in : string, target : string) -> string {
+fill_placeholder :: (in : string, target : string, self : bool) -> string {
   index := find_index_from_left(in,"{");
   if index == -1 return in;
 
@@ -315,5 +316,12 @@ fill_placeholder :: (in : string, target : string) -> string {
   front := slice(in, 0, index);
   end   := slice(in, close+1, in.count - close);
 
-  return sprint ("%%%",front, target, end);
+  print("front count:%\n end count:%\n",front.count, end.count);
+
+  if self {
+    if front.count > end.count return sprint("%%%",front, "me", end);
+    else return sprint("%%%",front, "I", end);
+  }
+
+  return sprint("%%%",front, target, end);
 }

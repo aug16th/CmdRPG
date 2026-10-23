@@ -105,7 +105,13 @@ main :: () {
           print("%\n", CurrentLocation.desc);
 
         case .INTERACT;
-          print("What do you do with the %\n", CurrentInteract.name);
+          if CurrentInteract.Type == {
+            case .OBJECT;
+            print("What do you do with the %\n", CurrentInteract.name);
+
+            case .CHARACTER;
+            print("What do you do with %\n", CurrentInteract.name);
+          }
         
         case .ENCOUNTER;
           print("%\n", CurrentEncounter.desc);

@@ -35,7 +35,15 @@ interact execution:
 Satan
 name : Satan
 role : Demon
-hit : You hit the shopkeeper which starts a fight.
+hit : You hit the demon which starts a fight.
 hit execution:
   start_encounter(Satan, demon, You are now in an encounter against the demon)
 morality : -1
+
+Buddha
+name : Buddha
+role : Monk
+hit : You hit the monk which starts a fight.
+hit execution:
+  start_encounter(Buddha, monk, You are now in an encounter against the monk)
+virtue_vs_might : 1

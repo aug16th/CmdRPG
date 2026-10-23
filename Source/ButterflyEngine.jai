@@ -45,7 +45,7 @@ reputation_label :: (r : Reputation) -> string {//need the neutral edge zones
     c := axis_sign(r.competence, DEAD_ZONE);
     l := axis_sign(r.likeability, DEAD_ZONE);
 
-    if c ==  1 && l ==  1 return "default";//respected
+    if c ==  1 && l ==  1 return "respect";//respected
     if c == 0 && l == 0 return "default";
     if c ==  1 && l <= 0 return "fear";
     if c < 0 && l ==  1 return "pity";
