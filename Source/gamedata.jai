@@ -61,6 +61,7 @@ Location :: struct {
 }
 
 Encounter :: struct {
+  action : string;
   char  : *Character;
   desc  : string;
 }

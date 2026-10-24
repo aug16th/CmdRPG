@@ -86,12 +86,12 @@ start_encounter :: (args : [] string){
     print("Error: not enough arguments\n",);
     return;
   } else {
-    e := args[1];
-    d := args[2];
+    act := args[1];
+    desc := args[2];
     found, char := table_find(*Characters_Table, args[0]);
 
     if found {
-      var : Encounter = .{char = char, desc = d};
+      var : Encounter = .{char = char, desc = desc, action = act};
       Start_Encounter(var);
     } else print("Error: Character not found\n");
   }

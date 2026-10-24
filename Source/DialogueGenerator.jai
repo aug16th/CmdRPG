@@ -289,7 +289,7 @@ generate_recall_dialogue :: (mem : *MemoryCounter, tags : [] string) -> string {
   
   targ := mem.latest.target.name;
   self := CurrentInteract.name == targ;
-  act := mem.latest.action;
+  out := mem.latest.outcome;
   wit : string;
   if mem.latest.witnessed wit = "saw";
   else wit = "heard";
@@ -300,7 +300,7 @@ generate_recall_dialogue :: (mem : *MemoryCounter, tags : [] string) -> string {
   if objsuc refsuc, ref = table_find(*obj, sprint("Reference.%",wit));
 
   recall := pick_by_tags(*ref, tags);
-  recall = fill_placeholder(recall, *obj, act, tags, targ, self);//fill in the placeholder
+  recall = fill_placeholder(recall, *obj, out, tags, targ, self);//fill in the placeholder
   //recall = fill_placeholder(recall, targ, self);//fill in target if any
   //maybe later we make a function that checks character relation so we can build what they call another character
   return recall;

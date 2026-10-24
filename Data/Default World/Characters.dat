@@ -4,7 +4,7 @@ name : Bob
 role : Bartender
 hit : You hit the bartender which starts a fight.
 hit execution:
-  start_encounter(Bartender, bartender, You are now in an encounter against the bartender)
+  start_encounter(Bartender, attack, You are now in an encounter against the bartender)
 interact : You're a thirsty one ain't ya? Heres another drink.
 interact execution:
   add_item_to_location(Tavern, Ale)
@@ -15,7 +15,7 @@ name : Jim
 role : Town Guard
 hit : You hit the guard which starts a fight.
 hit execution:
-  start_encounter(Town Guard, guard, You are now in an encounter against a guard)
+  start_encounter(Town Guard, attack, You are now in an encounter against a guard)
 interact : i heard theres a bunch of goblins setting up camp right outside of town.
 interact execution:
   known_area_add(GoblinVillage)
@@ -26,7 +26,7 @@ name : Randy
 role : Shopkeeper
 hit : You hit the shopkeeper which starts a fight.
 hit execution:
-  start_encounter(Shopkeeper, shopkeeper, You are now in an encounter against the shopkeeper)
+  start_encounter(Shopkeeper, attack, You are now in an encounter against the shopkeeper)
 interact : My shop just got robbed next door! There's absolutely nothing left.
 interact execution:
   add_location_to_area(Town, Shop)
@@ -37,7 +37,7 @@ name : Satan
 role : Demon
 hit : You hit the demon which starts a fight.
 hit execution:
-  start_encounter(Satan, demon, You are now in an encounter against the demon)
+  start_encounter(Satan, attack, You are now in an encounter against the demon)
 morality : -1
 
 Buddha
@@ -45,5 +45,5 @@ name : Buddha
 role : Monk
 hit : You hit the monk which starts a fight.
 hit execution:
-  start_encounter(Buddha, monk, You are now in an encounter against the monk)
+  start_encounter(Buddha, attack, You are now in an encounter against the monk)
 virtue_vs_might : 1

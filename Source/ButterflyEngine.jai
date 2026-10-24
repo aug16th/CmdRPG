@@ -7,7 +7,8 @@
 // }
 
 Memory :: struct {
-  action    : string;//kill,lose,run,destroy
+  action    : string;//attack
+  outcome   : string;//kill,lose,run,destroy
   target    : *Character;//who or what
   location  : string;
   witnessed : bool;
@@ -27,7 +28,7 @@ MemoryCounter :: struct {//count together similar events
 check_grudges :: (loc : Location) {//this gets called on Set_Location and after winning an encounter
   for loc.Characters {
     if it.Grudge {
-      Start_Encounter(.{it,sprint("% attacks you. They want revenge because you killed their friend.", it.name) });
+      Start_Encounter(.{"attack", it,sprint("% attacks you. They want revenge because you killed their friend.", it.name)});//should action be attack when someone else attacks?
       return;
     }
   }
@@ -65,13 +66,14 @@ update_reputation :: () {
   CurrentSceneMem = fresh;
 }
 
-add_to_scene :: (act : string, targ : *Character, loc : Location, wit : bool, c : float, l : float) {//records memory to current scene
+add_to_scene :: (act : string, out : string, targ : *Character, loc : Location, wit : bool, c : float, l : float) {//records memory to current scene
   delta : Vector2;
   delta.x = l;
   delta.y = c;
 
   mem : Memory = .{
     action = act,
+    outcome = out,
     target = targ,
     location = loc.name,
     witnessed = wit,
@@ -125,7 +127,7 @@ Character_reputation_add :: (char : *Character, mem : Memory) {
 }
 
 character_remember :: (char : *Character, mem : Memory) {
-  obj := find_or_add(*char.memcounter, mem.action);
+  obj := find_or_add(*char.memcounter, mem.outcome);
   obj.count += 1;
   obj.latest = mem;
   obj.delta += mem.delta;
@@ -208,7 +210,7 @@ get_lowest_delta_index :: (arr : [] MemoryCounter) -> int {
   
 
   for CurrentSceneMem {
-    obj := find_or_add(*temp, it.action);
+    obj := find_or_add(*temp, it.outcome);
     obj.count += 1;
     obj.latest = it;
     obj.delta += calculate_reputation_change(char, it);

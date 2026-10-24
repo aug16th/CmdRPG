@@ -27,6 +27,6 @@ add_item_to_location(Location, Interactable)
 
 Adds an item to the specified location. This can be used if the player orders something from the bartender. It can also be used to spawn objects after talking to someone.
 
-start_encounter(Character, type, string)
+start_encounter(Character, action, string)
 
-Starts an ecounter. Character is the character you are fighting. type is just a string for the type. For example if its a guard then use "guard" or "goblin" if its a goblin. string is just what will be printed when the encounter begins. It is essentially a description of the encounter. You can use this to trigger an encounter either on hit or simply from talking.
+Starts an ecounter. Character is the character you are fighting. action is what action started the encounter. If it was on hit, then the action in attack. string is just what will be printed when the encounter begins. It is essentially a description of the encounter. You can use this to trigger an encounter either on hit or simply from talking.
