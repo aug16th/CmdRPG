@@ -41,9 +41,10 @@ axis_sign :: (value: float, dead_zone: float) -> int {
 }
 
 reputation_label :: (r : Vector2) -> string {//need the neutral edge zones
+    //print("like:%\ncomp:%\n",r.x,r.y);
     DEAD_ZONE :: 0.25;
 
-    c := axis_sign(r.x, DEAD_ZONE);
+    c := axis_sign(r.y, DEAD_ZONE);
     l := axis_sign(r.x, DEAD_ZONE);
 
     if c ==  1 && l ==  1 return "respect";//respected
