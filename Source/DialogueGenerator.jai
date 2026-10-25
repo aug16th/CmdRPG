@@ -1,9 +1,12 @@
 Dialogue_Table : Table(string, Table(string, Table(string, [..] string)));
 
+Tags :: [] string;//Tags is always an array of strings
+
 generate_dialogue :: (char : *Character, DType: string) -> string {//Todo: input witness bool
   //print("generating dialogue\n");
   temprep := calculate_temp_reputation(char);//temporary reputation combined with current scene
-  tags : [] string = .[reputation_label(temprep)];//create our tags
+  tags : Tags = .[reputation_label(temprep)];
+  //array_add(*tags, reputation_label(temprep));//create our tags
   generated : string;
   piece : string;
   succ0 :bool;
@@ -246,7 +249,7 @@ lowered :: (s: string) -> string {
   return result;
 }
 
-pick_by_tags :: (table: *Table(string, [..] string), tags: [] string) -> string {
+pick_by_tags :: (table: *Table(string, [..] string), tags: Tags) -> string {
   counts: Table(string, int);
   defer deinit(*counts);
 
@@ -285,7 +288,7 @@ pick_by_tags :: (table: *Table(string, [..] string), tags: [] string) -> string 
   return "";
 }
 
-generate_recall_dialogue :: (mem : *MemoryCounter, tags : [] string) -> string {//Todo: check memcounter count for repeat offender. for now does not differentiate if it happened to multiple targets or the same one.
+generate_recall_dialogue :: (mem : *MemoryCounter, tags : Tags) -> string {//Todo: check memcounter count for repeat offender. for now does not differentiate if it happened to multiple targets or the same one.
   
   targ := mem.latest.target.name;
   self := CurrentInteract.name == targ;
@@ -307,7 +310,7 @@ generate_recall_dialogue :: (mem : *MemoryCounter, tags : [] string) -> string {
   
 }
 
-fill_placeholder :: (in : string, table : *Table(string, Table(string, [..] string)), action : string, tags : [] string,targ : string, self :bool) -> string {
+fill_placeholder :: (in : string, table : *Table(string, Table(string, [..] string)), action : string, tags : Tags,targ : string, self :bool) -> string {
   index := find_index_from_left(in,"{");
   if index == -1 return in;
 
