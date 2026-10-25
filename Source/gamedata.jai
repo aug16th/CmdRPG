@@ -57,12 +57,13 @@ Location :: struct {
   desc : string;
   Interactables : [] Interactable;
   Characters : [] *Character;
+  Encounters : [] Encounter;//encounters that the player can join
   Can_Leave : bool;
 }
 
 Encounter :: struct {
   action : string;
-  char  : *Character;
+  char  : *Character;//make this an array so there can be multiple characters already in this encounter
   desc  : string;
 }
 
