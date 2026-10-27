@@ -76,23 +76,23 @@ add_item_to_location :: (args : [] string){
     found2, inte := table_find(*Interactables_Table, i);
     if found && found2 {
       Add_Interactable_To_Location(loc, inte.*);
-      print("\n- There is now a % here -\n", inte.name);
+      print("\n- There is now some % here -\n", inte.name);
     } else print("Error: location or interactable not found\n",);
   } 
 } @GameCommand
 
-start_encounter :: (args : [] string){
-  if args.count < 3 {
-    print("Error: not enough arguments\n",);
-    return;
-  } else {
-    act := args[1];
-    desc := args[2];
-    found, char := table_find(*Characters_Table, args[0]);
+// start_encounter :: (args : [] string){
+//   if args.count < 3 {
+//     print("Error: not enough arguments\n",);
+//     return;
+//   } else {
+//     act := args[1];
+//     desc := args[2];
+//     found, char := table_find(*Characters_Table, args[0]);
 
-    if found {
-      var : Encounter = .{char = char, desc = desc, action = act};
-      Start_Encounter(var);
-    } else print("Error: Character not found\n");
-  }
-} @GameCommand
+//     if found {
+//       var : Encounter = .{char = char, desc = desc, action = act};
+//       Start_Encounter(var);
+//     } else print("Error: Character not found\n");
+//   }
+// } @GameCommand

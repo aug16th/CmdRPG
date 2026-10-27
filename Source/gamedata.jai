@@ -57,14 +57,20 @@ Location :: struct {
   desc : string;
   Interactables : [] Interactable;
   Characters : [] *Character;
-  Encounters : [] Encounter;//encounters that the player can join
+  Encounters : [] *Encounter;//encounters that the player can join
   Can_Leave : bool;
 }
 
 Encounter :: struct {
   action : string;
-  char  : *Character;//make this an array so there can be multiple characters already in this encounter
+  Characters  : [] *Character;//make this an array so there can be multiple characters already in this encounter
   desc  : string;
+}
+
+end_encounter :: () {
+  array_ordered_remove_by_value(*CurrentLocation.Encounters, CurrentEncounter);
+  free(CurrentEncounter);
+  CurrentEncounter = null;
 }
 
 #import "File";

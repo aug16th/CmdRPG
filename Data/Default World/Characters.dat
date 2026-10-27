@@ -10,7 +10,7 @@ interact execution:
   add_item_to_location(Tavern, Ale)
 #acquaintances: Town Guard, Shopkeeper
 
-Town Guard
+Jim Guard
 name : Jim
 role : Town Guard
 hit : You hit the guard which starts a fight.
@@ -19,7 +19,29 @@ hit execution:
 interact : i heard theres a bunch of goblins setting up camp right outside of town.
 interact execution:
   known_area_add(GoblinVillage)
-#acquaintances: Bartender, Shopkeeper
+acquaintances: Rob Guard, Dave Guard
+
+Rob Guard
+name : Rob
+role : Town Guard
+hit : You hit the guard which starts a fight.
+hit execution:
+  start_encounter(Town Guard, attack, You are now in an encounter against a guard)
+interact : i heard theres a bunch of goblins setting up camp right outside of town.
+interact execution:
+  known_area_add(GoblinVillage)
+acquaintances: Jim Guard, Dave Guard
+
+Dave Guard
+name : Dave
+role : Town Guard
+hit : You hit the guard which starts a fight.
+hit execution:
+  start_encounter(Town Guard, attack, You are now in an encounter against a guard)
+interact : i heard theres a bunch of goblins setting up camp right outside of town.
+interact execution:
+  known_area_add(GoblinVillage)
+acquaintances: Jim Guard, Rob Guard
 
 Shopkeeper
 name : Randy

@@ -21,7 +21,7 @@ CurrentState : State;
 CurrentArea : *Area;
 CurrentLocation : *Location;
 CurrentInteract : *Interactable;
-CurrentEncounter: Encounter;
+CurrentEncounter: *Encounter;
 CurrentTime : int;
 CurrentSceneMem : [..] Memory;
 
@@ -56,7 +56,7 @@ Add_Interactable_To_Location :: (l : *Location, i : Interactable){
   l.Interactables = result;
 }
 
-Start_Encounter :: (e : Encounter){
+Start_Encounter :: (e : *Encounter){
   CurrentEncounter = e;
   CurrentState = .ENCOUNTER;
 }
@@ -164,7 +164,11 @@ look_choice :: (){
       print("%\n", it.name);
     }
     for CurrentLocation.Characters{
-      print("% the %\n", it.name, it.Role);
+      print("%\n", character_fulladdress(it));
+    }
+    case .ENCOUNTER;
+    for CurrentEncounter.Characters {
+      print("%\n", character_fulladdress(it));
     }
   }
 }
@@ -226,12 +230,38 @@ has_choice :: (s : string){
     case .INTERACT;
     success := false;
       if same_string(s, "hit") {
-        print("%", CurrentInteract.Hit_Text.text);
-        for CurrentInteract.Hit_Text.func {
+        success = true;
+        if CurrentInteract.Type == .CHARACTER {//if character
+          c := cast(*Character)CurrentInteract;
+          if CurrentEncounter {//if in the middle of an encounter
+          print("already in an encounter\n");
+            if random_bool_weighted(0.7) {//randomly win
+              for c.Acquaintances {
+              it.Grudge = true;
+              }
+              add_to_scene(CurrentEncounter.action,"kill", c, CurrentLocation, true, 0.3, -0.3);
+              remove_interactable(CurrentInteract);
+              print("you won\n");
+            } else {
+              //lose
+              print("you lost.\n");
+              add_to_scene(CurrentEncounter.action,"lose", c, CurrentLocation, true, -0.3, -0.3);
+            }
+          } else {//create a new encounter
+          //print("starting new enounter\n");
+            tmp : [] *Character = .[c];
+            chars := array_copy(tmp);//copy to the heap
+            enc := New(Encounter);
+            enc.* = .{"attack", chars,sprint("You are now in an encouter against a %",c.Role)};
+            Start_Encounter(enc);
+          }
+        } else {// if not character
+          print("%", CurrentInteract.Hit_Text.text);
+          for CurrentInteract.Hit_Text.func {
           run_func(it);
+          }
         }
         //remove_interactable(CurrentInteract);
-        success = true;
       }
       if same_string(s, "interact") || same_string(s, CurrentInteract.Int_Alias){
         if CurrentInteract.Type == .CHARACTER {
@@ -255,24 +285,41 @@ has_choice :: (s : string){
         success = true;
       }
       print("\n");
-      if success && CurrentState == .ENCOUNTER return;//don't set back to location if in encounter
       if success {
-      CurrentState = .LOCATION;
-      return;
+        //if encounter still exists, return to it
+        if CurrentEncounter && CurrentEncounter.Characters.count > 0 {
+          CurrentState = .ENCOUNTER;
+          return;
+        }
+        else {
+          if CurrentEncounter {
+           end_encounter(); 
+          }
+          CurrentState = .LOCATION;
+          check_grudges(CurrentLocation);
+          return;
+        }
       }
-  //Interact------------------------------------------------------------//   
+  //Encounter------------------------------------------------------------//   
     case .ENCOUNTER;
-      if same_string(s, "run"){
-        print("You run away from the %\n", character_fulladdress(CurrentEncounter.char));
+      if same_string(s, "leave"){
+        print("You leave the encounter\n");
         //update_reputation("run", CurrentEncounter.char, CurrentLocation, true, -0.3, -0.3);
-        add_to_scene(CurrentEncounter.action,"run", CurrentEncounter.char, CurrentLocation, true, -0.3, -0.3);
+        add_to_scene(CurrentEncounter.action,"run", CurrentEncounter.Characters[0], CurrentLocation, true, -0.3, -0.3);
         update_reputation();
-        CurrentState = .AREA;
-        fresh : Encounter;
-        CurrentEncounter = fresh;
+        CurrentState = .LOCATION;
+        end_encounter();
         return;
       }   
-      if same_string(s, "fight"){
+      for CurrentEncounter.Characters{
+        //print("%\n",it.name);
+        if same_string(s, it.name) {
+          CurrentState = .INTERACT;
+          CurrentInteract = it;
+          return;
+        }
+      }
+      /*if same_string(s, "fight"){
         if random_bool_weighted(0.7) {//randomly win
           print("You defeat %\n", character_fulladdress(CurrentEncounter.char));
           for CurrentEncounter.char.Acquaintances {
@@ -291,7 +338,7 @@ has_choice :: (s : string){
         CurrentEncounter = fresh;
         check_grudges(CurrentLocation);//check if someone else joins because you killed their friend
         return;
-      } 
+      }*/
   }
   print("Unknown command: %\n", s);
   default_commands();
@@ -318,8 +365,8 @@ default_commands :: (){
       if CurrentInteract.Int_Alias.count > 0 print("%\n", CurrentInteract.Int_Alias);
 
     case .ENCOUNTER;
-      print("run\n");
-      print("fight\n");
+      print("leave\n");
+      print("look\n");
   }
 }
 
@@ -340,6 +387,16 @@ remove_interactable :: (i : Interactable){
     }
   }
   CurrentLocation.Characters = temparr2;
+
+  if CurrentEncounter{//remove from encounter
+    temparr3 : [..] *Character;
+    for CurrentEncounter.Characters{
+      if it.name != i.name {
+        array_add(*temparr3, it);
+      }
+    }
+  CurrentEncounter.Characters = temparr3;
+  }
 }
 
 #import "String";

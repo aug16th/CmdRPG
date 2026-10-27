@@ -1,10 +1,10 @@
 #import "Random";
 
 init_random_seed :: () {
-  seed := current_time_consensus().low;
-  seed = mix_seed(seed);//scrambles the seed so the lower bits vary
-
-  random_seed(seed);//creates a random seed (it's still using the same random on start)
+  seed := current_time_consensus();//.low;
+  //seed = mix_seed(seed);//scrambles the seed so the lower bits vary
+  
+  random_seed(cast,force(Some_Big_Time_Value) seed);//creates a random seed (it's still using the same random on start)
 }
 
 mix_seed :: (x: u64) -> u64 {

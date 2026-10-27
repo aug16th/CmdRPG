@@ -26,12 +26,29 @@ MemoryCounter :: struct {//count together similar events
 //Event_Table : Table(*Location, Event);//Location struct is in gamedata.jai
 
 check_grudges :: (loc : Location) {//this gets called on Set_Location and after winning an encounter
+  chars : [..] *Character;
   for loc.Characters {
-    if it.Grudge {
-      Start_Encounter(.{"attack", it,sprint("% attacks you. They want revenge because you killed their friend.", it.name)});//should action be attack when someone else attacks?
-      return;
-    }
+    if it.Grudge array_add(*chars, it);
   }
+  if chars.count > 0 {
+    enc := New(Encounter);
+    name : string;
+    if chars.count < 2 name = sprint("% attacks you",chars[0].name);
+    else if same_jobs(chars) name = sprint("% %s attack you", chars.count, chars[0].Role);
+    else name = "Some people attack you";
+    enc.* = .{"attack",chars,sprint("%. They want revenge because you killed their friend.", name)};
+    Start_Encounter(enc);
+    //should action be attack when someone else attacks?
+    return;
+  }
+}
+
+same_jobs :: (arr : [] *Character) -> bool {
+  first := arr[0].Role;
+  for arr {
+    if it.Role != first return false;
+  }
+  return true;
 }
 
 axis_sign :: (value: float, dead_zone: float) -> int {
