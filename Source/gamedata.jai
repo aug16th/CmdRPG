@@ -56,8 +56,8 @@ Location :: struct {
   name : string;
   desc : string;
   Interactables : [] Interactable;
-  Characters : [] *Character;
-  Encounters : [] *Encounter;//encounters that the player can join
+  Characters : [..] *Character;
+  Encounters : [..] *Encounter;//encounters that the player can join
   Can_Leave : bool;
 }
 
@@ -67,10 +67,22 @@ Encounter :: struct {
   desc  : string;
 }
 
+add_encounter :: (loc : *Location, enc : Encounter) {
+  newenc := New(Encounter);
+  newenc.* = enc;
+  array_add(*loc.Encounters, newenc);
+  for enc.Characters {//remove characters involved from the location
+    array_ordered_remove_by_value(*loc.Characters, it); 
+  }
+}
+
 end_encounter :: () {
-  array_ordered_remove_by_value(*CurrentLocation.Encounters, CurrentEncounter);
-  free(CurrentEncounter);
-  CurrentEncounter = null;
+  if CurrentEncounter.Characters.count < 2 {
+    for CurrentEncounter.Characters{array_add(*CurrentLocation.Characters,it);}
+    array_ordered_remove_by_value(*CurrentLocation.Encounters, CurrentEncounter);
+    free(CurrentEncounter);
+    CurrentEncounter = null;
+  }
 }
 
 #import "File";

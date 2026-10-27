@@ -87,6 +87,13 @@ main :: () {
   Load_Game_Data(gameconfig);
   Load_Dialogue_Data(dialogueconfig);
 
+  enc : Encounter = {
+    action = "attack",
+    Characters = .[CurrentLocation.Characters[0],CurrentLocation.Characters[1]],
+    desc = "two drunks are in a fight"
+  };
+  add_encounter(CurrentLocation, enc);
+
   //print("%\n", generate_dialogue("Greetings",.[]));
 
   //Input loop
@@ -160,11 +167,18 @@ look_choice :: (){
       print("This place seems empty. You can't see anyone or anything in here.\n");
       return;
     }
+    i :int;
     for CurrentLocation.Interactables{
-      print("%\n", it.name);
+      print("[%]%\n",i, it.name);
+      i += 1;
     }
     for CurrentLocation.Characters{
-      print("%\n", character_fulladdress(it));
+      print("[%]%\n",i, character_fulladdress(it));
+      i += 1;
+    }
+    for CurrentLocation.Encounters{
+      print("[%]%\n",i, it.desc);
+      i += 1;
     }
     case .ENCOUNTER;
     for CurrentEncounter.Characters {
@@ -226,6 +240,26 @@ has_choice :: (s : string){
           return;
         }
       } 
+      ind := string_to_int(s);
+      icount := CurrentLocation.Interactables.count;
+      ccount := CurrentLocation.Characters.count;
+      ecount := CurrentLocation.Encounters.count;
+      if ind > -1 && ind < (icount + ccount + ecount) {
+        CurrentState = .INTERACT;
+        //print("valid index\n");
+        if ind < icount {
+          CurrentInteract = *CurrentLocation.Interactables[ind]; 
+          return;
+        }
+        if ind < icount+ccount {
+          CurrentInteract = CurrentLocation.Characters[ind-icount]; 
+          return;
+        }
+        if ind < icount+ccount+ecount {
+          Start_Encounter(CurrentLocation.Encounters[ind-icount-ccount]);
+          return;
+        }
+      }
  //Interact------------------------------------------------------------//   
     case .INTERACT;
     success := false;
@@ -234,7 +268,7 @@ has_choice :: (s : string){
         if CurrentInteract.Type == .CHARACTER {//if character
           c := cast(*Character)CurrentInteract;
           if CurrentEncounter {//if in the middle of an encounter
-          print("already in an encounter\n");
+          //print("already in an encounter\n");
             if random_bool_weighted(0.7) {//randomly win
               for c.Acquaintances {
               it.Grudge = true;
