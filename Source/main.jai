@@ -89,7 +89,7 @@ main :: () {
 
   enc : Encounter = {
     action = "attack",
-    Characters = .[CurrentLocation.Characters[0],CurrentLocation.Characters[1]],
+    Characters = .[.{CurrentLocation.Characters[0],1,false},.{CurrentLocation.Characters[1],2,false}],
     desc = "two drunks are in a fight"
   };
   add_encounter(CurrentLocation, enc);
@@ -182,7 +182,7 @@ look_choice :: (){
     }
     case .ENCOUNTER;
     for CurrentEncounter.Characters {
-      print("%\n", character_fulladdress(it));
+      print("%\n", character_fulladdress(it.char));
     }
   }
 }
@@ -279,11 +279,15 @@ has_choice :: (s : string){
             } else {
               //lose
               print("you lost.\n");
+              for CurrentEncounter.Characters {
+                it.char.Grudge = false;
+              }
               add_to_scene(CurrentEncounter.action,"lose", c, CurrentLocation, true, -0.3, -0.3);
+              end_encounter();
             }
           } else {//create a new encounter
           //print("starting new enounter\n");
-            tmp : [] *Character = .[c];
+            tmp : [] Participant = .[.{c,1,true}];
             chars := array_copy(tmp);//copy to the heap
             enc := New(Encounter);
             enc.* = .{"attack", chars,sprint("You are now in an encouter against a %",c.Role)};
@@ -337,19 +341,26 @@ has_choice :: (s : string){
   //Encounter------------------------------------------------------------//   
     case .ENCOUNTER;
       if same_string(s, "leave"){
+        if ran_away(CurrentEncounter) {
+          print("You ran away\n");
+          add_to_scene(CurrentEncounter.action,"run", CurrentEncounter.Characters[0].char, CurrentLocation, true, -0.3, -0.3);
+          CurrentState = .LOCATION;
+          end_encounter();
+          return;
+        }
         print("You leave the encounter\n");
         //update_reputation("run", CurrentEncounter.char, CurrentLocation, true, -0.3, -0.3);
-        add_to_scene(CurrentEncounter.action,"run", CurrentEncounter.Characters[0], CurrentLocation, true, -0.3, -0.3);
-        update_reputation();
+        
+        //update_reputation();
         CurrentState = .LOCATION;
         end_encounter();
         return;
       }   
       for CurrentEncounter.Characters{
         //print("%\n",it.name);
-        if same_string(s, it.name) {
+        if same_string(s, it.char.name) {
           CurrentState = .INTERACT;
-          CurrentInteract = it;
+          CurrentInteract = it.char;
           return;
         }
       }
@@ -423,9 +434,9 @@ remove_interactable :: (i : Interactable){
   CurrentLocation.Characters = temparr2;
 
   if CurrentEncounter{//remove from encounter
-    temparr3 : [..] *Character;
+    temparr3 : [..] Participant;
     for CurrentEncounter.Characters{
-      if it.name != i.name {
+      if it.char.name != i.name {
         array_add(*temparr3, it);
       }
     }

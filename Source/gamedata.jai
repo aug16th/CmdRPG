@@ -61,9 +61,15 @@ Location :: struct {
   Can_Leave : bool;
 }
 
+Participant :: struct {
+  char : *Character;
+  side : int;
+  aggro: bool;//are they agroing the player?
+}
+
 Encounter :: struct {
   action : string;
-  Characters  : [] *Character;//make this an array so there can be multiple characters already in this encounter
+  Characters  : [] Participant;
   desc  : string;
 }
 
@@ -72,17 +78,24 @@ add_encounter :: (loc : *Location, enc : Encounter) {
   newenc.* = enc;
   array_add(*loc.Encounters, newenc);
   for enc.Characters {//remove characters involved from the location
-    array_ordered_remove_by_value(*loc.Characters, it); 
+    array_ordered_remove_by_value(*loc.Characters, it.char); 
   }
 }
 
 end_encounter :: () {
   if CurrentEncounter.Characters.count < 2 {
-    for CurrentEncounter.Characters{array_add(*CurrentLocation.Characters,it);}
+    for CurrentEncounter.Characters{array_add(*CurrentLocation.Characters,it.char);}
     array_ordered_remove_by_value(*CurrentLocation.Encounters, CurrentEncounter);
     free(CurrentEncounter);
     CurrentEncounter = null;
+  } else CurrentEncounter = null;//encounter still exists its just not current
+}
+
+ran_away :: (e : Encounter) -> bool {
+  for e.Characters {
+    if it.aggro return true;
   }
+  return false;
 }
 
 #import "File";
