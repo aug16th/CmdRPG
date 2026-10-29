@@ -82,13 +82,32 @@ add_encounter :: (loc : *Location, enc : Encounter) {
   }
 }
 
+Start_Encounter :: (e : *Encounter){
+  for e.Characters {//remove characters involved from the location
+    array_ordered_remove_by_value(*CurrentLocation.Characters, it.char); 
+  }
+  CurrentEncounter = e;
+  CurrentState = .ENCOUNTER;
+}
+
 end_encounter :: () {
-  if CurrentEncounter.Characters.count < 2 {
+  if fight_over(CurrentEncounter) {
     for CurrentEncounter.Characters{array_add(*CurrentLocation.Characters,it.char);}
     array_ordered_remove_by_value(*CurrentLocation.Encounters, CurrentEncounter);
     free(CurrentEncounter);
     CurrentEncounter = null;
   } else CurrentEncounter = null;//encounter still exists its just not current
+}
+
+fight_over :: (e : Encounter) -> bool {
+  s : int;
+  for e.Characters {
+    if it.side > 0 {
+      if s == 0 s = it.side;
+      if s < it.side return false;
+    }
+  }
+  return true;
 }
 
 ran_away :: (e : Encounter) -> bool {

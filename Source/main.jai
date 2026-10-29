@@ -56,11 +56,6 @@ Add_Interactable_To_Location :: (l : *Location, i : Interactable){
   l.Interactables = result;
 }
 
-Start_Encounter :: (e : *Encounter){
-  CurrentEncounter = e;
-  CurrentState = .ENCOUNTER;
-}
-
 Set_Location :: (loc : *Location){
   CurrentState = .LOCATION;
   CurrentLocation = loc;
@@ -167,7 +162,7 @@ look_choice :: (){
       print("This place seems empty. You can't see anyone or anything in here.\n");
       return;
     }
-    i :int;
+    i :int = 1;
     for CurrentLocation.Interactables{
       print("[%]%\n",i, it.name);
       i += 1;
@@ -240,7 +235,7 @@ has_choice :: (s : string){
           return;
         }
       } 
-      ind := string_to_int(s);
+      ind := string_to_int(s)-1;
       icount := CurrentLocation.Interactables.count;
       ccount := CurrentLocation.Characters.count;
       ecount := CurrentLocation.Encounters.count;
@@ -349,11 +344,9 @@ has_choice :: (s : string){
           return;
         }
         print("You leave the encounter\n");
-        //update_reputation("run", CurrentEncounter.char, CurrentLocation, true, -0.3, -0.3);
-        
-        //update_reputation();
         CurrentState = .LOCATION;
         end_encounter();
+        check_grudges(CurrentLocation);
         return;
       }   
       for CurrentEncounter.Characters{
