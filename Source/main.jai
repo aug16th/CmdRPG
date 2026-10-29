@@ -84,7 +84,7 @@ main :: () {
 
   enc : Encounter = {
     action = "attack",
-    Characters = .[.{CurrentLocation.Characters[0],1,false},.{CurrentLocation.Characters[1],2,false}],
+    Characters = .[.{CurrentLocation.Characters[0],1,false, .ALIVE},.{CurrentLocation.Characters[1],2,false, .ALIVE}],
     desc = "two drunks are in a fight"
   };
   add_encounter(CurrentLocation, enc);
@@ -177,7 +177,7 @@ look_choice :: (){
     }
     case .ENCOUNTER;
     for CurrentEncounter.Characters {
-      print("%\n", character_fulladdress(it.char));
+      print("%(%)\n", character_fulladdress(it.char),it.status);
     }
   }
 }
@@ -264,25 +264,37 @@ has_choice :: (s : string){
           c := cast(*Character)CurrentInteract;
           if CurrentEncounter {//if in the middle of an encounter
           //print("already in an encounter\n");
-            if random_bool_weighted(0.7) {//randomly win
-              for c.Acquaintances {
-              it.Grudge = true;
+            exist, part := get_participant(c);
+            if exist {
+              if random_bool_weighted(0.7) {//randomly win
+                if part.status == {
+                  case .ALIVE;
+                  part.status = .DOWN;
+                  add_to_scene(CurrentEncounter.action,"defeat", c, CurrentLocation, true, 0.3, 0.3);
+                  print("You took down %\n", character_fulladdress(c));
+
+                  case .DOWN;
+                  part.status = .DEAD;
+                  for c.Acquaintances {
+                  it.Grudge = true;
+                  }
+                  add_to_scene(CurrentEncounter.action,"kill", c, CurrentLocation, true, 0.3, -0.3);
+                  remove_interactable(CurrentInteract);
+                  print("you killed %\n", character_fulladdress(c));
+                }
+              } else {
+                //lose
+                print("you lost.\n");
+                for CurrentEncounter.Characters {
+                  it.char.Grudge = false;
+                }
+                add_to_scene(CurrentEncounter.action,"lose", c, CurrentLocation, true, -0.3, -0.3);
+                end_encounter();
               }
-              add_to_scene(CurrentEncounter.action,"kill", c, CurrentLocation, true, 0.3, -0.3);
-              remove_interactable(CurrentInteract);
-              print("you won\n");
-            } else {
-              //lose
-              print("you lost.\n");
-              for CurrentEncounter.Characters {
-                it.char.Grudge = false;
-              }
-              add_to_scene(CurrentEncounter.action,"lose", c, CurrentLocation, true, -0.3, -0.3);
-              end_encounter();
-            }
+          }
           } else {//create a new encounter
           //print("starting new enounter\n");
-            tmp : [] Participant = .[.{c,1,true}];
+            tmp : [] Participant = .[.{c,1,true, .ALIVE}];
             chars := array_copy(tmp);//copy to the heap
             enc := New(Encounter);
             enc.* = .{"attack", chars,sprint("You are now in an encouter against a %",c.Role)};

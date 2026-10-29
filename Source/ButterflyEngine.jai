@@ -28,7 +28,7 @@ MemoryCounter :: struct {//count together similar events
 check_grudges :: (loc : Location) {//this gets called on Set_Location and after winning an encounter
   chars : [..] Participant;
   for loc.Characters {
-    if it.Grudge array_add(*chars, .{it, 1, true});
+    if it.Grudge array_add(*chars, .{it, 1, true, .ALIVE});
   }
   if chars.count > 0 {
     enc := New(Encounter);
@@ -107,7 +107,7 @@ calculate_reputation_change :: (char : Character, mem : Memory)-> Vector2 {
   //default harmed/ did something bad
   //check if friends
   friend : int;
-  if array_find(char.Acquaintances, mem.target) friend = 1;
+  if array_find(char.Acquaintances, mem.target) || char.name == mem.target.name friend = 1;//is friend or self
 
   l := mem.delta.x;
   c := mem.delta.y;

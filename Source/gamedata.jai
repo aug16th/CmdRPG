@@ -61,10 +61,24 @@ Location :: struct {
   Can_Leave : bool;
 }
 
+Status :: enum {
+  ALIVE;
+  DOWN;
+  DEAD;
+}
+
 Participant :: struct {
   char : *Character;
   side : int;
   aggro: bool;//are they agroing the player?
+  status : Status;
+}
+
+get_participant :: (char : *Character) -> bool, *Participant {
+  for *CurrentEncounter.Characters {
+    if it.char == char return true, it;
+  }
+  return false, null;
 }
 
 Encounter :: struct {
@@ -104,7 +118,7 @@ fight_over :: (e : Encounter) -> bool {
   for e.Characters {
     if it.side > 0 {
       if s == 0 s = it.side;
-      if s < it.side return false;
+      if s < it.side && it.status == .ALIVE return false;
     }
   }
   return true;
@@ -112,7 +126,7 @@ fight_over :: (e : Encounter) -> bool {
 
 ran_away :: (e : Encounter) -> bool {
   for e.Characters {
-    if it.aggro return true;
+    if it.aggro && it.status == .ALIVE return true;
   }
   return false;
 }
