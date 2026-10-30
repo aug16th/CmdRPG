@@ -12,13 +12,13 @@ Memory :: struct {
   target    : *Character;//who or what
   location  : string;
   witnessed : bool;
-  delta     : Vector2;//likeability and competence
+  delta     : Reputation;//likeability, competence, favor
 }
 
 MemoryCounter :: struct {//count together similar events
   count   : int;
   latest  : Memory;//maybe this can be the 5 latest?
-  delta   : Vector2;//agregate delta of all past memories
+  delta   : Reputation;//agregate delta of all past memories
   time    : int;//when last recorder to check recency againts CurrentTime
   mentioned : bool;//if already mentioned no need to do it again
 }
@@ -57,7 +57,7 @@ axis_sign :: (value: float, dead_zone: float) -> int {
     return 0;
 }
 
-reputation_label :: (r : Vector2) -> string {//need the neutral edge zones
+reputation_label :: (r : Reputation) -> string {//need the neutral edge zones
     //print("like:%\ncomp:%\n",r.x,r.y);
     DEAD_ZONE :: 0.25;
 
@@ -85,7 +85,7 @@ update_reputation :: () {
 }
 
 add_to_scene :: (act : string, out : string, targ : *Character, loc : Location, wit : bool, c : float, l : float) {//records memory to current scene
-  delta : Vector2;
+  delta : Reputation;
   delta.x = l;
   delta.y = c;
 
@@ -101,7 +101,7 @@ add_to_scene :: (act : string, out : string, targ : *Character, loc : Location, 
   array_add(*CurrentSceneMem, mem);
 }
 
-calculate_reputation_change :: (char : Character, mem : Memory)-> Vector2 {
+calculate_reputation_change :: (char : Character, mem : Memory)-> Reputation {
   //add a check if we harmed or helped the person
 
   //default harmed/ did something bad
@@ -109,17 +109,22 @@ calculate_reputation_change :: (char : Character, mem : Memory)-> Vector2 {
   friend : int;
   if array_find(char.Acquaintances, mem.target) || char.name == mem.target.name friend = 1;//is friend or self
 
-  l := mem.delta.x;
-  c := mem.delta.y;
+  l := mem.delta.x;//likeability
+  c := mem.delta.y;//competence
+  f := mem.delta.z;//favor
 
   if friend == 1 && char.friendship > 0 {
     //ignore morality and scale based on friendship
     //after lerping vvm l might = c
+    //if this is a friend we need to apply favor
+    if mem.outcome == "kill" || mem.outcome == "defeat" f = -0.3;
+    else f = 0.3;//owe the player for saving friend
+
     if l >= 0 l = l*-char.friendship;//if l is positive scale with negative friendship
     else l -= abs(l)*char.friendship;
 
   } else {
-    //if 0 friendship or not a friend, apply morality
+    //if 0 friendship or not a friend, apply morality(change this to check chaos)
     l *= char.morality;
 
     if char.virtue_vs_might < 0 l = lerp(l, c, -char.virtue_vs_might);
@@ -129,7 +134,7 @@ calculate_reputation_change :: (char : Character, mem : Memory)-> Vector2 {
   l *= char.reactivity.x;
   c *= char.reactivity.y;
 
-  return .{l,c};
+  return .{l,c,0.0};//Todo: calculate Z later
 }
 
 Character_reputation_add :: (char : *Character, mem : Memory) {
@@ -138,8 +143,9 @@ Character_reputation_add :: (char : *Character, mem : Memory) {
   //calculate relative contextual perception
   memo.delta = calculate_reputation_change(char,mem);
 
-  char.reputation.likeability = clamp(char.reputation.likeability + memo.delta.x, -1, 1);
-  char.reputation.competence = clamp(char.reputation.competence + memo.delta.y, -1, 1);
+  char.reputation.x = clamp(char.reputation.x + memo.delta.x, -1, 1);
+  char.reputation.y = clamp(char.reputation.y + memo.delta.y, -1, 1);
+  char.reputation.z = clamp(char.reputation.z + memo.delta.z, -1, 1);
 
   character_remember(char, memo);//tries to remember if big enough
 }
@@ -159,8 +165,8 @@ character_remember :: (char : *Character, mem : Memory) {
   }
 }
 
-score_delta :: (v : Vector2) -> float {
-  return abs(v.x) + abs(v.y);
+score_delta :: (v : Reputation) -> float {
+  return abs(v.x) + abs(v.y) + abs(v.z);
 }
 
 get_lowest_delta_index :: (arr : [] MemoryCounter) -> int {
@@ -190,9 +196,7 @@ get_lowest_delta_index :: (arr : [] MemoryCounter) -> int {
  }
 
  character_recall :: (char : Character) -> bool, *MemoryCounter {
-  rep : Vector2;
-  rep.x = char.reputation.likeability;
-  rep.y = char.reputation.competence;
+  rep := char.reputation;
   rep = normalize(rep);
 
   HighDelta := 0.0;
@@ -212,18 +216,18 @@ get_lowest_delta_index :: (arr : [] MemoryCounter) -> int {
   return success, chosen;
  }
 
- calculate_temp_reputation :: (char : Character) -> Vector2 {
-  v : Vector2;
+ calculate_temp_reputation :: (char : Character) -> Reputation {
+  v : Vector3;
   for CurrentSceneMem {
     v += calculate_reputation_change(char, it);
   }
 
-  v += .{char.reputation.likeability, char.reputation.competence};
+  v += char.reputation;
 
   return v;
  }
 
- recall_currentscene :: (char : Character, tempdelta : Vector2) -> bool, MemoryCounter {
+ recall_currentscene :: (char : Character, tempdelta : Reputation) -> bool, MemoryCounter {
   temp : Table(string, MemoryCounter);
   
 

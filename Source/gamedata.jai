@@ -18,10 +18,7 @@ Interactable :: struct {
   Type : Interact_Type = .OBJECT;
 }
 
-Reputation :: struct {
-  likeability : float;
-  competence  : float;
-}
+Reputation :: Vector3;//likeability,competence,favor 
 
 Character :: struct {
   #as using base : Interactable;
