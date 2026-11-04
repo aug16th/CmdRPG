@@ -27,8 +27,10 @@ MemoryCounter :: struct {//count together similar events
 
 check_grudges :: (loc : Location) {//this gets called on Set_Location and after winning an encounter
   chars : [..] Participant;
+  print("checking grudges\n");
   for loc.Characters {
-    if it.Grudge array_add(*chars, .{it, 1, true, .ALIVE});
+    //print("%\n",it.reputation.z < 0);
+    if it.reputation.z < 0 array_add(*chars, .{it, 1, true, .ALIVE});
   }
   if chars.count > 0 {
     enc := New(Encounter);
@@ -119,7 +121,7 @@ calculate_reputation_change :: (char : *Character, mem : Memory)-> Reputation {
   //check if friends
   friend : int;
   //print("friend found:%\n",array_find(char.Acquaintances, mem.target));
-  if array_find(char.Acquaintances, mem.target) || char.name == mem.target.name friend = 1;//is friend or self
+  if array_find(char.Acquaintances, mem.target) || char == mem.target friend = 1;//is friend or self
   inencounter : bool;
   self : *Participant;//can use this to check if self
 
@@ -176,11 +178,14 @@ calculate_reputation_change :: (char : *Character, mem : Memory)-> Reputation {
 //crazy math ---------------------------------//
   k :float;
   m := char.alignment.x;
+  //print("%'s alignment:%\n",char.name,char.alignment.x);
   r := friend;
   A := BASE * good_sign;
+  //print("%'s friend:%\n", char.name,r);
 
-  if m == 1 || self {//if ghandi
+  if m == 1 || char == mem.target {//if ghandi
     l = A;
+    //print("% is ghandi\n",char.name);
   } else if m > 0.5 {//if above average
     //
   } else { // everyone else

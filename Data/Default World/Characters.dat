@@ -69,4 +69,5 @@ hit : You hit the monk which starts a fight.
 hit execution:
   start_encounter(Buddha, attack, You are now in an encounter against the monk)
 morality : 1
+virtue_vs_might : 1
 acquaintances: Bartender

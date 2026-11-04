@@ -302,10 +302,10 @@ load_characters :: (sec : Section){
              f := string_to_float(value);
              f = clamp(f, -1, 1);
              current.alignment.x = f;
-        // } else if key == "virtue_vs_might" {
-        //     f := string_to_float(value);
-        //     f = clamp(f, -1, 1);
-        //     current.virtue_vs_might = f;
+        } else if key == "virtue_vs_might" {
+             f := string_to_float(value);
+             f = clamp(f, -1, 1);
+             current.alignment.z = f;
 
         } else if key == "reactivity" {
             v :=  string_to_vector3(value);
