@@ -19,6 +19,8 @@ Interactable :: struct {
 }
 
 Reputation :: Vector3;//likeability,competence,favor 
+Alignment  :: Vector3;//GoodnEvil, OrdernChaos, VirtuenMight
+//friendship and morality is collapsed into one since its about how they react to others
 
 Character :: struct {
   #as using base : Interactable;
@@ -28,12 +30,13 @@ Character :: struct {
   Acquaintances : [] *Character; //Characters that know this chracter and might come for revenge
   Grudge : bool;
   //reputation calculations---------------------
-  morality : float = 1;//How much good actions scale likeability. -1 likes evil and 0 doesn't care
-  virtue_vs_might : float;//How much they prioritize competence vs Likeability.-1 only cares about strength and 1 only cares about kindness
-  reactivity : Vector2 = .{1,1};
-  friendship : float = 1.0;// how much reputation is affected when victim is am acquaintance. 0 means they don't care so cold mfs.
+  // morality : float = 1;//How much good actions scale likeability. -1 likes evil and 0 doesn't care
+  // virtue_vs_might : float;//How much they prioritize competence vs Likeability.-1 only cares about strength and 1 only cares about kindness
+  reactivity : Vector3 = .{1,1,1};
+  // friendship : float = 1.0;// how much reputation is affected when victim is an acquaintance. 0 means they don't care so cold mfs.
 
   reputation : Reputation;
+  alignment  : Alignment = .{0.5,0.3,0};//default is nice person who dislikes chaos but isn't a stickler
   memory : [5] MemoryCounter;
   memcounter : Table(string, MemoryCounter);
 }
@@ -113,11 +116,12 @@ end_encounter :: () {
 fight_over :: (e : Encounter) -> bool {
   s : int;
   for e.Characters {
-    if it.side > 0 {
+    if it.side > 0 && it.status == .ALIVE {
       if s == 0 s = it.side;
-      if s < it.side && it.status == .ALIVE return false;
+      if s < it.side return false;
     }
   }
+  print("fight is over\n");
   return true;
 }
 
@@ -294,23 +298,23 @@ load_characters :: (sec : Section){
             data.char = current;
             data.Acquaintances = arr;
             array_add(*loaded_acquaintance, data);
-        } else if key == "morality" {
-            f := string_to_float(value);
-            f = clamp(f, -1, 1);
-            current.morality = f;
-        } else if key == "virtue_vs_might" {
-            f := string_to_float(value);
-            f = clamp(f, -1, 1);
-            current.virtue_vs_might = f;
+         } else if key == "morality" {
+             f := string_to_float(value);
+             f = clamp(f, -1, 1);
+             current.alignment.x = f;
+        // } else if key == "virtue_vs_might" {
+        //     f := string_to_float(value);
+        //     f = clamp(f, -1, 1);
+        //     current.virtue_vs_might = f;
 
         } else if key == "reactivity" {
-            v :=  string_to_vector2(value);
+            v :=  string_to_vector3(value);
             current.reactivity = v;
 
-        } else if key == "friendship" {
-            f := string_to_float(value);
-            f = clamp(f, -1, 1);
-            current.friendship = f;
+        // } else if key == "friendship" {
+        //     f := string_to_float(value);
+        //     f = clamp(f, -1, 1);
+        //     current.friendship = f;
 
         }
     }
@@ -555,13 +559,14 @@ parse_call :: (s: string) -> func_call {
     return result;
 }
 
-string_to_vector2 :: (s : string)-> Vector2 {
-  v : Vector2;
+string_to_vector3 :: (s : string)-> Vector3 {
+  v : Vector3;
   arr := split(s,",");
-  if arr.count < 2 return v;
+  if arr.count < 3 return v;
 
   v.x = string_to_float(trim(arr[0], " \t\r"));
   v.y = string_to_float(trim(arr[1], " \t\r"));
+  v.z = string_to_float(trim(arr[2], " \t\r"));
 
   return v;
 }

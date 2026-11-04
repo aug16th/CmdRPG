@@ -68,4 +68,5 @@ role : Monk
 hit : You hit the monk which starts a fight.
 hit execution:
   start_encounter(Buddha, attack, You are now in an encounter against the monk)
-virtue_vs_might : 1
+morality : 1
+acquaintances: Bartender

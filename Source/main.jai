@@ -216,7 +216,7 @@ has_choice :: (s : string){
  //Location-------------------------------------------------------------//   
     case .LOCATION;
       if same_string(s, "leave") {
-        update_reputation();
+        clear_scene_reputation();
         CurrentState = .AREA;
         CurrentTime += 1;
         return;
@@ -270,7 +270,7 @@ has_choice :: (s : string){
                 if part.status == {
                   case .ALIVE;
                   part.status = .DOWN;
-                  add_to_scene(CurrentEncounter.action,"defeat", c, CurrentLocation, true, 0.3, 0.3);
+                  add_to_scene("hit","defeat", c, CurrentLocation, true, 0.3, 0.3);
                   print("You took down %\n", character_fulladdress(c));
 
                   case .DOWN;
@@ -278,7 +278,7 @@ has_choice :: (s : string){
                   for c.Acquaintances {
                   it.Grudge = true;
                   }
-                  add_to_scene(CurrentEncounter.action,"kill", c, CurrentLocation, true, 0.3, -0.3);
+                  add_to_scene("hit","kill", c, CurrentLocation, true, 0.3, -0.3);
                   remove_interactable(CurrentInteract);
                   print("you killed %\n", character_fulladdress(c));
                 }
@@ -288,7 +288,7 @@ has_choice :: (s : string){
                 for CurrentEncounter.Characters {
                   it.char.Grudge = false;
                 }
-                add_to_scene(CurrentEncounter.action,"lose", c, CurrentLocation, true, -0.3, -0.3);
+                add_to_scene("hit", "lose", c, CurrentLocation, true, -0.3, -0.3);
                 end_encounter();
               }
           }
@@ -312,7 +312,8 @@ has_choice :: (s : string){
         if CurrentInteract.Type == .CHARACTER {
           i := CurrentInteract;
           c := cast(*Character) i;
-          print("%\n", reputation_label(calculate_temp_reputation(c)));//print current reputation
+          print("%\n",c.reputation);
+          print("%\n", reputation_label(c.reputation));//print current reputation
           print("\"");
           print("%", generate_dialogue(c, "Greetings"));
           print("\"");
@@ -350,7 +351,7 @@ has_choice :: (s : string){
       if same_string(s, "leave"){
         if ran_away(CurrentEncounter) {
           print("You ran away\n");
-          add_to_scene(CurrentEncounter.action,"run", CurrentEncounter.Characters[0].char, CurrentLocation, true, -0.3, -0.3);
+          add_to_scene("run", "run", CurrentEncounter.Characters[0].char, CurrentLocation, true, -0.3, -0.3);
           CurrentState = .LOCATION;
           end_encounter();
           return;

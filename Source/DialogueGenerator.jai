@@ -4,8 +4,7 @@ Tags :: [] string;//Tags is always an array of strings
 
 generate_dialogue :: (char : *Character, DType: string) -> string {//Todo: input witness bool
   //print("generating dialogue\n");
-  temprep := calculate_temp_reputation(char);//temporary reputation combined with current scene
-  tags : Tags = .[reputation_label(temprep)];
+  tags : Tags = .[reputation_label(char.reputation)];
   //array_add(*tags, reputation_label(temprep));//create our tags
   generated : string;
   piece : string;
@@ -20,8 +19,8 @@ generate_dialogue :: (char : *Character, DType: string) -> string {//Todo: input
   if succ0 && succ {
     for DR {
       if it.text == "Reference" {
-        //Current scene memory
-        found, mem := recall_currentscene(char, temprep);
+        //Current scene memory // need to figure out if we want a recency check and if so we would still need to store it per character instead of in the scene because we need to calculate the impact of each ecounter on the NPC
+        /*found, mem := recall_currentscene(char, temprep);
         if CurrentSceneMem.count > 0 && found{
         //we need to generate a recall based on the current scene memories
           if !mem.mentioned && random_bool_weighted(it.chance) {
@@ -30,7 +29,7 @@ generate_dialogue :: (char : *Character, DType: string) -> string {//Todo: input
             append(*builder, piece);
             mem.mentioned = true;
           }
-        } else {
+        } else {*/
         //internal memory
         found, mem := character_recall(char);
         if found {
@@ -41,7 +40,7 @@ generate_dialogue :: (char : *Character, DType: string) -> string {//Todo: input
             mem.mentioned = true;
           }
         }
-      }
+      //}
       
       }else if random_bool_weighted(it.chance){
 

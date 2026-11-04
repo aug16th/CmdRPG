@@ -73,18 +73,18 @@ reputation_label :: (r : Reputation) -> string {//need the neutral edge zones
     return "default";
 }
 
-update_reputation :: () {
-  for CurrentLocation.Characters {
-    char := it;
-    for CurrentSceneMem {
-      Character_reputation_add(char, it);
-    }
-  }
+clear_scene_reputation :: () {//we already memorized in add_to_scene so just clear
+  // for CurrentLocation.Characters {
+  //   char := it;
+  //   for CurrentSceneMem {
+  //     Character_reputation_add(char, it);
+  //   }
+  // }
   fresh : [..] Memory;
   CurrentSceneMem = fresh;
 }
 
-add_to_scene :: (act : string, out : string, targ : *Character, loc : Location, wit : bool, c : float, l : float) {//records memory to current scene
+add_to_scene :: (act : string, out : string, targ : *Character, loc : *Location, wit : bool, c : float, l : float) {//records memory to current scene
   delta : Reputation;
   delta.x = l;
   delta.y = c;
@@ -99,20 +99,132 @@ add_to_scene :: (act : string, out : string, targ : *Character, loc : Location, 
   };
 
   array_add(*CurrentSceneMem, mem);
+
+  chars := loc.Characters;
+  if CurrentEncounter {//add characters in encounters. we could make an argument that NPCs that are in an encounter are too busy to notice what you did
+    for CurrentEncounter.Characters {
+      array_add(*chars, it.char);
+    }
+  }
+
+  for chars {//character tries to remember
+    Character_reputation_add(it, mem);
+  }
 }
 
-calculate_reputation_change :: (char : Character, mem : Memory)-> Reputation {
+calculate_reputation_change :: (char : *Character, mem : Memory)-> Reputation {
   //add a check if we harmed or helped the person
 
   //default harmed/ did something bad
   //check if friends
   friend : int;
+  //print("friend found:%\n",array_find(char.Acquaintances, mem.target));
   if array_find(char.Acquaintances, mem.target) || char.name == mem.target.name friend = 1;//is friend or self
+  inencounter : bool;
+  self : *Participant;//can use this to check if self
+
+  exist2 , targ := get_participant(mem.target);
+  if CurrentEncounter {
+    inencounter, self = get_participant(char);
+    if inencounter {
+      if self.side > 0 {//if not neutral
+        if exist2 {
+          if self.side == targ.side friend = 1;
+          else friend = -1;
+        }
+      } else friend = 0;
+    } else {//check for enemy of friend
+      found : bool;
+      acq : *Participant;
+      for char.Acquaintances {
+        found, acq = get_participant(it);
+        if found break; 
+      }
+      if found && exist2 {
+        if acq.side == targ.side friend = 1;
+        else friend = -1;
+      }
+    }
+  }
 
   l := mem.delta.x;//likeability
   c := mem.delta.y;//competence
   f := mem.delta.z;//favor
 
+  BASE :: 0.3;
+  good_sign : float;
+
+  //likeability--------------------------------//
+  lbase : float;
+  if mem.action == {
+    case "hit";
+    good_sign = -1;
+    //if friend != 0 l = lbase * friend;
+    //else l = lbase;//set to default for now but set to chaos later
+
+    case "gift";
+    good_sign = 1;
+    
+    case "run";
+    l = -0.3;
+  }
+  //if friend != 0 
+
+  //good_term = good_sign * char.alignment.x;
+  //calculate chaos here// order_term = order_sign * char.alignment.y;
+  //l = BASE*good_term;// + BASE*order_term
+//crazy math ---------------------------------//
+  k :float;
+  m := char.alignment.x;
+  r := friend;
+  A := BASE * good_sign;
+
+  if m == 1 || self {//if ghandi
+    l = A;
+  } else if m > 0.5 {//if above average
+    //
+  } else { // everyone else
+    if m > 0 k = (1+r)/2.0;
+    else k = 1;
+
+    l = max(A*m*k,A*(1+2*r));//add chaos to this later
+  }
+
+  //competence--------------------------------//
+  cbase : float;
+  if mem.outcome == {
+    case "defeat";//defeat the enemy
+    cbase = 0.3;
+
+    case "lose";//lose to the enemy
+    cbase = -0.3;
+
+    case "kill";//kill the enemy
+    cbase = 0.3;
+
+    case "run";//run from the enemy
+    cbase = -0.3;
+  }
+
+  c = cbase;
+
+  //favor--------------------------------//
+  fbase : float;
+  if mem.action == {
+    case "hit";
+    fbase = -0.3;
+    if friend != 0 f = fbase * friend;
+    else f = 0;
+
+    case "run";
+    f = 0;
+  }
+  
+  if char.alignment.z < 0 l = lerp(l, c, -char.alignment.z);
+  if char.alignment.z > 0 c = lerp(c, l, char.alignment.z);
+
+
+  /*
   if friend == 1 && char.friendship > 0 {
     //ignore morality and scale based on friendship
     //after lerping vvm l might = c
@@ -123,18 +235,23 @@ calculate_reputation_change :: (char : Character, mem : Memory)-> Reputation {
     if l >= 0 l = l*-char.friendship;//if l is positive scale with negative friendship
     else l -= abs(l)*char.friendship;
 
+  } else if friend == -1 { //enemy
+    if inencounter {//if helped in a fight Todo: make this a single calculation
+      if mem.outcome == "kill" || mem.outcome == "defeat" f = 0.3;
+      else f = -0.3;//despise player for helping enemy
+    } else l *= -1;
   } else {
     //if 0 friendship or not a friend, apply morality(change this to check chaos)
     l *= char.morality;
 
     if char.virtue_vs_might < 0 l = lerp(l, c, -char.virtue_vs_might);
     if char.virtue_vs_might > 0 c = lerp(c, l, char.virtue_vs_might);
-  }
+  }*/
 
   l *= char.reactivity.x;
   c *= char.reactivity.y;
 
-  return .{l,c,0.0};//Todo: calculate Z later
+  return .{l,c,f};
 }
 
 Character_reputation_add :: (char : *Character, mem : Memory) {
@@ -216,43 +333,43 @@ get_lowest_delta_index :: (arr : [] MemoryCounter) -> int {
   return success, chosen;
  }
 
- calculate_temp_reputation :: (char : Character) -> Reputation {
-  v : Vector3;
-  for CurrentSceneMem {
-    v += calculate_reputation_change(char, it);
-  }
+//  calculate_temp_reputation :: (char : *Character) -> Reputation {
+//   v : Vector3;
+//   for CurrentSceneMem {
+//     v += calculate_reputation_change(char, it);
+//   }
 
-  v += char.reputation;
+//   v += char.reputation;
 
-  return v;
- }
+//   return v;
+//  }
 
- recall_currentscene :: (char : Character, tempdelta : Reputation) -> bool, MemoryCounter {
-  temp : Table(string, MemoryCounter);
+//  recall_currentscene :: (char : Character, tempdelta : Reputation) -> bool, MemoryCounter {
+//   temp : Table(string, MemoryCounter);
   
 
-  for CurrentSceneMem {
-    obj := find_or_add(*temp, it.outcome);
-    obj.count += 1;
-    obj.latest = it;
-    obj.delta += calculate_reputation_change(char, it);
-    obj.time = CurrentTime;
-  }
+//   for CurrentSceneMem {
+//     obj := find_or_add(*temp, it.outcome);
+//     obj.count += 1;
+//     obj.latest = it;
+//     obj.delta += calculate_reputation_change(char, it);
+//     obj.time = CurrentTime;
+//   }
 
-  HighDelta := 0.0;
-  chosen : MemoryCounter;
-  success : bool;
-  rep := normalize(tempdelta);
+//   HighDelta := 0.0;
+//   chosen : MemoryCounter;
+//   success : bool;
+//   rep := normalize(tempdelta);
 
-  for temp {
-    dot := dot_product(rep,it.delta);
-    //print("%\n",dot);
-    if dot >= HighDelta && dot > 0.0 {
-    HighDelta = dot;
-    chosen = it;
-    success = true;
-    }
-  }
+//   for temp {
+//     dot := dot_product(rep,it.delta);
+//     //print("%\n",dot);
+//     if dot >= HighDelta && dot > 0.0 {
+//     HighDelta = dot;
+//     chosen = it;
+//     success = true;
+//     }
+//   }
 
-  return success, chosen;
- }
+//   return success, chosen;
+//  }
