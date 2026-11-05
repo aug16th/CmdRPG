@@ -155,28 +155,28 @@ Load_Game_Data :: (directory : string){
     if !success {
           print("Error: Could not read the game data file!\n");
           return;
-      }
+    }
 
-      // Print the file text out to the console
-      lines := split(file_contents, "\n");
-      for * lines {
-        it.* = strip_comment(it.*);
-      }
+    // Print the file text out to the console
+    lines := split(file_contents, "\n");
+    for * lines {
+      it.* = strip_comment(it.*);
+    }
 
       
-      for lines {
-        if it.count >= 2 && it[0] == #char "["{
-            new_section := array_add(*sections);
-            new_section.tag = slice(it, find_index_from_left(it, "[")+1, find_index_from_left(it, "]")-1);  // strip the [ and ]
-            current = new_section;
-            continue;
-        }
+    for lines {
+      if it.count >= 2 && it[0] == #char "["{
+        new_section := array_add(*sections);
+        new_section.tag = slice(it, find_index_from_left(it, "[")+1, find_index_from_left(it, "]")-1);  // strip the [ and ]
+        current = new_section;
+        continue;
+      }
 
-        if current {
-            if it.count > 0 array_add(*current.lines, it);
-        }
+      if current {
+        if it.count > 0 array_add(*current.lines, it);
       }
     }
+  }
     //load everyting under tag
     location_secs : [..] Section;
     area_secs : [..] Section;
